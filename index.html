@@ -136,6 +136,64 @@
   }
   .coins-icon { font-size: 14px; }
 
+  /* ===== ACCOUNT BUTTON ===== */
+  .header-right { display: flex; align-items: center; gap: 8px; }
+  .account-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(122, 77, 255, 0.15), rgba(20, 9, 31, 0.6));
+    border: 1px solid rgba(122, 77, 255, 0.35);
+    color: var(--ghost);
+    font-size: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+    padding: 0;
+    overflow: hidden;
+  }
+  .account-btn:hover { transform: scale(1.08); box-shadow: 0 0 14px rgba(122,77,255,0.4); }
+  .account-btn.synced {
+    border-color: rgba(77, 255, 170, 0.45);
+    background: linear-gradient(135deg, rgba(77, 255, 170, 0.18), rgba(20, 9, 31, 0.6));
+    color: var(--accent-green);
+  }
+  .account-btn img { width: 100%; height: 100%; object-fit: cover; }
+  .sync-toast {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(20, 9, 31, 0.92);
+    border: 1px solid rgba(122, 77, 255, 0.4);
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--ghost);
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+    z-index: 1000;
+  }
+  .sync-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .account-info {
+    background: rgba(122, 77, 255, 0.08);
+    border: 1px solid rgba(122, 77, 255, 0.25);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 14px;
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--ghost);
+    text-align: center;
+    font-size: 14px;
+  }
+  .account-info strong { color: var(--accent-purple); display: block; margin-bottom: 4px; font-family: 'Cinzel', serif; letter-spacing: 0.1em; font-size: 12px; text-transform: uppercase; }
+  .account-info small { display: block; margin-top: 6px; color: var(--text-faded); font-style: italic; }
+
   /* ===== IDENTITY ===== */
   .identity { text-align: center; margin-bottom: 8px; }
   .pet-name {
@@ -1363,6 +1421,9 @@
     font-size: 13px;
   }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -1371,9 +1432,12 @@
 <div class="container">
   <header>
     <div class="brand">SpiritPet</div>
-    <div class="coins">
-      <span class="coins-icon">✦</span>
-      <span id="coinsVal">0</span>
+    <div class="header-right">
+      <div class="coins">
+        <span class="coins-icon">✦</span>
+        <span id="coinsVal">0</span>
+      </div>
+      <button class="account-btn" id="accountBtn" title="Cuenta y sincronización" aria-label="Cuenta">☁</button>
     </div>
   </header>
 
@@ -1462,6 +1526,26 @@
     <span id="evoStage">forma 1/4</span>
   </div>
 </div>
+
+<!-- Account modal -->
+<div class="modal" id="accountModal">
+  <div class="modal-panel modal-content">
+    <div class="modal-title">Tu cuenta</div>
+    <div id="accountInfoBox" class="account-info">
+      <strong>Sin conexión</strong>
+      Tu progreso solo está en este dispositivo.
+      <small>Inicia sesión para que nunca se pierda.</small>
+    </div>
+    <button class="modal-btn" id="googleLoginBtn">
+      <span style="display:inline-block;width:18px;height:18px;background:#fff;border-radius:50%;color:#4285F4;font-weight:900;font-family:sans-serif;font-size:13px;line-height:18px;text-align:center;margin-right:8px;vertical-align:-3px;">G</span>
+      Iniciar sesión con Google
+    </button>
+    <button class="modal-btn" id="logoutBtn" style="display:none">Cerrar sesión</button>
+    <button class="modal-btn" id="accountCloseBtn" style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:var(--text-faded);">Cerrar</button>
+  </div>
+</div>
+
+<div class="sync-toast" id="syncToast"></div>
 
 <!-- Naming modal -->
 <div class="modal" id="nameModal">
@@ -1687,6 +1771,196 @@ function loadState() {
 }
 function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+  scheduleCloudSync();
+}
+
+// ============ FIREBASE / CLOUD SYNC ============
+const FIREBASE_CONFIG = {
+  // PEGAR AQUÍ EL firebaseConfig DE LA CONSOLA DE FIREBASE
+  // apiKey: "...",
+  // authDomain: "...",
+  // projectId: "...",
+  // ...
+};
+const SYNC_TS_KEY = 'spiritpet_synced_at';
+let firebaseReady = false;
+let currentUser = null;
+let cloudSyncTimer = null;
+let unsubscribeSnapshot = null;
+let suppressNextSnapshot = false;
+
+function getLocalSyncedAt() {
+  try { return parseInt(localStorage.getItem(SYNC_TS_KEY) || '0', 10) || 0; } catch(e) { return 0; }
+}
+function setLocalSyncedAt(ts) {
+  try { localStorage.setItem(SYNC_TS_KEY, String(ts)); } catch(e) {}
+}
+
+function showToast(msg, durationMs = 2200) {
+  const t = document.getElementById('syncToast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => t.classList.remove('show'), durationMs);
+}
+
+function initFirebase() {
+  if (!FIREBASE_CONFIG.apiKey) return;
+  if (typeof firebase === 'undefined') return;
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    firebaseReady = true;
+    firebase.auth().onAuthStateChanged(handleAuthChange);
+  } catch (e) {
+    console.warn('Firebase init failed', e);
+  }
+}
+
+async function handleAuthChange(user) {
+  currentUser = user;
+  updateAccountUI();
+  if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+  if (!user) return;
+  try {
+    const docRef = firebase.firestore().collection('saves').doc(user.uid);
+    const snap = await docRef.get();
+    if (snap.exists) {
+      const cloud = snap.data();
+      const cloudUpdated = cloud.updated || 0;
+      const localSyncedAt = getLocalSyncedAt();
+      const hasMeaningfulLocal = state && state.name;
+      if (cloudUpdated > localSyncedAt + 1000 && hasMeaningfulLocal) {
+        const useCloud = confirm('Tienes un progreso guardado en la nube. ¿Restaurarlo? (Cancelar = mantener el actual y sobrescribir la nube)');
+        if (useCloud) {
+          adoptCloudState(cloud);
+        } else {
+          pushCloudNow();
+        }
+      } else if (cloudUpdated > 0 && !hasMeaningfulLocal) {
+        adoptCloudState(cloud);
+      } else if (state) {
+        pushCloudNow();
+      }
+    } else if (state) {
+      pushCloudNow();
+    }
+    unsubscribeSnapshot = docRef.onSnapshot(s => {
+      if (!s.exists) return;
+      if (suppressNextSnapshot) { suppressNextSnapshot = false; return; }
+      const data = s.data();
+      const remoteUpdated = data.updated || 0;
+      const localSyncedAt = getLocalSyncedAt();
+      if (remoteUpdated > localSyncedAt + 3000) {
+        adoptCloudState(data);
+        showToast('↻ Sincronizado desde otro dispositivo');
+      }
+    });
+  } catch (e) {
+    console.warn('Cloud load failed', e);
+    showToast('⚠ Error de sincronización');
+  }
+}
+
+function scheduleCloudSync() {
+  if (!firebaseReady || !currentUser || !state) return;
+  clearTimeout(cloudSyncTimer);
+  cloudSyncTimer = setTimeout(pushCloudNow, 2000);
+}
+
+function adoptCloudState(cloud) {
+  suppressNextSnapshot = true;
+  state = { ...DEFAULT_STATE, ...cloud.state };
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+  setLocalSyncedAt(cloud.updated || Date.now());
+  const nm = document.getElementById('nameModal');
+  if (nm && nm.classList.contains('show')) nm.classList.remove('show');
+  render();
+}
+
+function pushCloudNow() {
+  if (!firebaseReady || !currentUser || !state) return;
+  clearTimeout(cloudSyncTimer);
+  suppressNextSnapshot = true;
+  const updated = Date.now();
+  firebase.firestore().collection('saves').doc(currentUser.uid).set({
+    state: state,
+    updated: updated,
+    name: state.name || '',
+    email: currentUser.email || ''
+  }).then(() => {
+    setLocalSyncedAt(updated);
+    const btn = document.getElementById('accountBtn');
+    if (btn) btn.classList.add('synced');
+  }).catch(e => {
+    console.warn('Cloud sync failed', e);
+    showToast('⚠ No se pudo guardar en la nube');
+  });
+}
+
+async function loginWithGoogle() {
+  if (!firebaseReady) {
+    alert('La sincronización aún no está activada. Vuelve a intentarlo en unos segundos.');
+    return;
+  }
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try {
+    await firebase.auth().signInWithPopup(provider);
+    closeAccountModal();
+    showToast('✓ Sesión iniciada');
+  } catch (e) {
+    if (e.code !== 'auth/popup-closed-by-user') {
+      alert('Error al iniciar sesión: ' + (e.message || e.code));
+    }
+  }
+}
+
+async function logout() {
+  if (!firebaseReady) return;
+  if (firebase.auth().currentUser) {
+    await firebase.auth().signOut();
+    showToast('Sesión cerrada');
+    closeAccountModal();
+  }
+}
+
+function updateAccountUI() {
+  const btn = document.getElementById('accountBtn');
+  const box = document.getElementById('accountInfoBox');
+  const loginBtn = document.getElementById('googleLoginBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (!btn) return;
+  if (currentUser) {
+    if (currentUser.photoURL) {
+      btn.innerHTML = `<img src="${currentUser.photoURL}" alt="">`;
+    } else {
+      btn.textContent = '✓';
+    }
+    btn.classList.add('synced');
+    btn.title = currentUser.email || 'Sesión iniciada';
+    if (box) {
+      box.innerHTML = `<strong>Sincronizado</strong>${currentUser.displayName || currentUser.email}<small>Tu progreso se guarda automáticamente en la nube.</small>`;
+    }
+    if (loginBtn) loginBtn.style.display = 'none';
+    if (logoutBtn) logoutBtn.style.display = '';
+  } else {
+    btn.innerHTML = '☁';
+    btn.classList.remove('synced');
+    btn.title = 'Cuenta y sincronización';
+    if (box) {
+      box.innerHTML = `<strong>Sin conexión</strong>Tu progreso solo está en este dispositivo.<small>Inicia sesión para que nunca se pierda.</small>`;
+    }
+    if (loginBtn) loginBtn.style.display = '';
+    if (logoutBtn) logoutBtn.style.display = 'none';
+  }
+}
+
+function openAccountModal() {
+  updateAccountUI();
+  document.getElementById('accountModal').classList.add('show');
+}
+function closeAccountModal() {
+  document.getElementById('accountModal').classList.remove('show');
 }
 
 // ============ ELEMENTS ============
@@ -1711,7 +1985,18 @@ function init() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
+  // Initialize cloud sync (no-op if not configured)
+  initFirebase();
 }
+
+// Account modal listeners
+document.getElementById('accountBtn').addEventListener('click', openAccountModal);
+document.getElementById('accountCloseBtn').addEventListener('click', closeAccountModal);
+document.getElementById('googleLoginBtn').addEventListener('click', loginWithGoogle);
+document.getElementById('logoutBtn').addEventListener('click', logout);
+document.getElementById('accountModal').addEventListener('click', e => {
+  if (e.target.id === 'accountModal') closeAccountModal();
+});
 
 $('nameBtn').addEventListener('click', () => {
   const n = $('nameInput').value.trim();

@@ -1,5 +1,5 @@
-// SpiritPet Service Worker v3
-const CACHE = 'spiritpet-v3';
+// SpiritPet Service Worker v4
+const CACHE = 'spiritpet-v4';
 const ASSETS = [
   './',
   './index.html',
