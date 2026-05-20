@@ -180,6 +180,72 @@
     z-index: 1000;
   }
   .sync-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .login-warn-banner {
+    position: fixed;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%) translateY(150%);
+    width: calc(100% - 24px);
+    max-width: 380px;
+    background: linear-gradient(135deg, rgba(255, 77, 122, 0.14), rgba(20, 9, 31, 0.96));
+    border: 1px solid rgba(255, 77, 122, 0.45);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--ghost);
+    font-size: 14px;
+    z-index: 998;
+    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
+    opacity: 0;
+    pointer-events: none;
+    box-shadow: 0 10px 36px rgba(0,0,0,0.5), 0 0 28px rgba(255, 77, 122, 0.2);
+  }
+  .login-warn-banner.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .login-warn-banner-icon { font-size: 22px; flex-shrink: 0; line-height: 1; }
+  .login-warn-banner-text { flex: 1; line-height: 1.3; }
+  .login-warn-banner-text strong {
+    color: var(--accent-red);
+    display: block;
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .login-warn-banner-btn {
+    background: linear-gradient(135deg, var(--accent-purple), #a855f7);
+    color: #fff;
+    border: none;
+    padding: 7px 12px;
+    border-radius: 18px;
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 700;
+    cursor: pointer;
+    flex-shrink: 0;
+    white-space: nowrap;
+    box-shadow: 0 0 14px rgba(122,77,255,0.4);
+  }
+  .login-warn-banner-close {
+    background: transparent;
+    border: none;
+    color: var(--text-faded);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .login-warn-banner-close:hover { color: var(--ghost); }
   .account-info {
     background: rgba(122, 77, 255, 0.08);
     border: 1px solid rgba(122, 77, 255, 0.25);
@@ -1547,6 +1613,16 @@
 
 <div class="sync-toast" id="syncToast"></div>
 
+<div class="login-warn-banner" id="loginWarnBanner">
+  <span class="login-warn-banner-icon">⚠</span>
+  <div class="login-warn-banner-text">
+    <strong>Tu progreso está en riesgo</strong>
+    Inicia sesión para que no se pierda nunca.
+  </div>
+  <button class="login-warn-banner-btn" id="loginWarnBannerBtn">Entrar</button>
+  <button class="login-warn-banner-close" id="loginWarnBannerClose" aria-label="Cerrar">×</button>
+</div>
+
 <!-- Naming modal -->
 <div class="modal" id="nameModal">
   <div class="modal-panel modal-content">
@@ -1823,6 +1899,12 @@ async function handleAuthChange(user) {
   currentUser = user;
   updateAccountUI();
   if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+  if (user) {
+    hideLoginNag();
+    clearTimeout(nagTimer);
+  } else {
+    startLoginNag();
+  }
   if (!user) return;
   try {
     const docRef = firebase.firestore().collection('saves').doc(user.uid);
@@ -1965,6 +2047,53 @@ function closeAccountModal() {
   document.getElementById('accountModal').classList.remove('show');
 }
 
+// ============ LOGIN NAG BANNER ============
+const NAG_DISMISS_KEY = 'spiritpet_login_nag_dismissed';
+const NAG_INTERVAL_MS = 8 * 60 * 1000; // 8 minutos
+const NAG_FIRST_DELAY_MS = 45 * 1000;  // 45s tras abrir
+let nagTimer = null;
+
+function nagShouldShow() {
+  if (currentUser) return false;
+  if (!firebaseReady) return false;
+  if (!state || !state.name) return false; // solo cuando ya hay fantasma
+  const dismissedAt = parseInt(localStorage.getItem(NAG_DISMISS_KEY) || '0', 10);
+  return (Date.now() - dismissedAt) > NAG_INTERVAL_MS;
+}
+
+function showLoginNag() {
+  if (!nagShouldShow()) return;
+  document.getElementById('loginWarnBanner').classList.add('show');
+}
+
+function hideLoginNag() {
+  document.getElementById('loginWarnBanner').classList.remove('show');
+}
+
+function dismissLoginNag() {
+  localStorage.setItem(NAG_DISMISS_KEY, String(Date.now()));
+  hideLoginNag();
+  scheduleNextNag();
+}
+
+function scheduleNextNag() {
+  clearTimeout(nagTimer);
+  if (currentUser) return;
+  nagTimer = setTimeout(() => {
+    showLoginNag();
+    scheduleNextNag();
+  }, NAG_INTERVAL_MS + 2000);
+}
+
+function startLoginNag() {
+  clearTimeout(nagTimer);
+  if (currentUser) return;
+  nagTimer = setTimeout(() => {
+    showLoginNag();
+    scheduleNextNag();
+  }, NAG_FIRST_DELAY_MS);
+}
+
 // ============ ELEMENTS ============
 const $ = id => document.getElementById(id);
 const ghost = $('ghost');
@@ -1999,6 +2128,11 @@ document.getElementById('logoutBtn').addEventListener('click', logout);
 document.getElementById('accountModal').addEventListener('click', e => {
   if (e.target.id === 'accountModal') closeAccountModal();
 });
+document.getElementById('loginWarnBannerBtn').addEventListener('click', () => {
+  hideLoginNag();
+  openAccountModal();
+});
+document.getElementById('loginWarnBannerClose').addEventListener('click', dismissLoginNag);
 
 $('nameBtn').addEventListener('click', () => {
   const n = $('nameInput').value.trim();
