@@ -1,0 +1,3240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0612">
+<meta name="description" content="Adopta un espíritu del más allá. Cuídalo, juega mini-juegos paranormales y decora su sanctum. Un tamagochi para quienes quieren compañía sin compromiso real.">
+
+<!-- iOS PWA -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SpiritPet">
+
+<!-- Open Graph (compartir en redes) -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="SpiritPet · Tu compañero del más allá">
+<meta property="og:description" content="Adopta un espíritu y cuídalo. Tamagochi paranormal con mini-juegos.">
+<meta property="og:image" content="icon-512.png">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SpiritPet · Tu compañero del más allá">
+<meta name="twitter:description" content="Adopta un espíritu y cuídalo. Tamagochi paranormal con mini-juegos.">
+<meta name="twitter:image" content="icon-512.png">
+
+<title>SpiritPet · Tu compañero del más allá</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #0a0612;
+    --bg-mid: #14091f;
+    --bg-card: rgba(20, 9, 31, 0.7);
+    --ghost: #e8e4f0;
+    --ghost-glow: #b8a8e8;
+    --accent-purple: #7a4dff;
+    --accent-cyan: #4dfff0;
+    --accent-red: #ff4d7a;
+    --accent-gold: #d4b87a;
+    --accent-green: #4dffaa;
+    --text-faded: #6b5b8a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    background: var(--bg-deep);
+    color: var(--ghost);
+    font-family: 'Cormorant Garamond', serif;
+    user-select: none;
+    -webkit-user-select: none;
+    overscroll-behavior: none;
+  }
+
+  body {
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(122, 77, 255, 0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(77, 255, 240, 0.08) 0%, transparent 50%),
+      var(--bg-deep);
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.4 0 0 0 0 0.7 0 0 0 0.4 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 1;
+    mix-blend-mode: overlay;
+  }
+
+  .orbs { position: fixed; inset: 0; pointer-events: none; z-index: 2; overflow: hidden; }
+  .orb {
+    position: absolute;
+    width: 3px; height: 3px;
+    background: var(--ghost-glow);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--ghost-glow), 0 0 16px var(--accent-purple);
+    opacity: 0;
+    animation: float linear infinite;
+  }
+  @keyframes float {
+    0% { transform: translateY(110vh); opacity: 0; }
+    10% { opacity: 0.7; }
+    90% { opacity: 0.7; }
+    100% { transform: translateY(-10vh) translateX(40px); opacity: 0; }
+  }
+
+  .container {
+    position: relative; z-index: 10;
+    max-width: 480px; margin: 0 auto;
+    padding: 16px 16px 24px;
+    min-height: 100dvh;
+  }
+
+  /* ===== HEADER ===== */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .brand {
+    font-family: 'Cinzel', serif;
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: 0.25em;
+    color: var(--ghost);
+    text-transform: uppercase;
+    text-shadow: 0 0 16px var(--accent-purple);
+  }
+  .coins {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, rgba(212, 184, 122, 0.15), rgba(20, 9, 31, 0.6));
+    border: 1px solid rgba(212, 184, 122, 0.3);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    color: var(--accent-gold);
+    font-weight: 600;
+  }
+  .coins-icon { font-size: 14px; }
+
+  /* ===== IDENTITY ===== */
+  .identity { text-align: center; margin-bottom: 8px; }
+  .pet-name {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    letter-spacing: 0.25em;
+    color: var(--accent-gold);
+    text-transform: uppercase;
+  }
+  .pet-stage {
+    font-style: italic;
+    font-size: 12px;
+    color: var(--text-faded);
+  }
+
+  /* ===== NOTICE ===== */
+  .notice {
+    background: linear-gradient(135deg, rgba(255, 77, 122, 0.12), rgba(20, 9, 31, 0.8));
+    border: 1px solid rgba(255, 77, 122, 0.3);
+    border-radius: 14px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    animation: pulse-notice 2s ease-in-out infinite;
+  }
+  .notice.show { display: flex; }
+  @keyframes pulse-notice {
+    0%, 100% { box-shadow: 0 0 0 rgba(255, 77, 122, 0); }
+    50% { box-shadow: 0 0 16px rgba(255, 77, 122, 0.3); }
+  }
+  .notice-text { font-style: italic; font-size: 13px; flex: 1; }
+
+  /* ===== SANCTUM ===== */
+  .sanctum {
+    position: relative;
+    height: 240px;
+    margin-bottom: 14px;
+    border-radius: 20px;
+    background:
+      radial-gradient(ellipse at center 70%, rgba(122, 77, 255, 0.25) 0%, transparent 60%),
+      linear-gradient(180deg, rgba(20, 9, 31, 0.4), rgba(10, 6, 18, 0.9));
+    border: 1px solid rgba(122, 77, 255, 0.2);
+    overflow: hidden;
+    box-shadow: inset 0 0 60px rgba(122, 77, 255, 0.15), 0 8px 32px rgba(0, 0, 0, 0.5);
+    transition: background 1s ease;
+  }
+  .sanctum.night {
+    background:
+      radial-gradient(ellipse at center 70%, rgba(40, 20, 80, 0.4) 0%, transparent 60%),
+      linear-gradient(180deg, rgba(5, 2, 10, 0.6), rgba(2, 1, 5, 0.95));
+  }
+
+  .stars { position: absolute; inset: 0; opacity: 0; transition: opacity 1s ease; }
+  .sanctum.night .stars { opacity: 1; }
+  .star {
+    position: absolute; width: 2px; height: 2px;
+    background: white; border-radius: 50%;
+    animation: twinkle 3s ease-in-out infinite;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.2; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.3); }
+  }
+
+  .celestial {
+    position: absolute; top: 18px; right: 18px;
+    width: 32px; height: 32px; border-radius: 50%;
+    transition: all 1s ease;
+  }
+  .celestial.sun {
+    background: radial-gradient(circle, #ffd47a, #d4a04a);
+    box-shadow: 0 0 30px rgba(255, 212, 122, 0.6);
+  }
+  .celestial.moon {
+    background: radial-gradient(circle at 35% 35%, #f0e8d4, #c4b89a 70%, #8a7a5a);
+    box-shadow: 0 0 20px rgba(240, 232, 212, 0.4);
+  }
+
+  /* ===== GHOST ===== */
+  .ghost-wrap {
+    position: absolute;
+    bottom: 20px; left: 50%;
+    transform: translateX(-50%);
+    width: 130px; height: 150px;
+    animation: hover 3.5s ease-in-out infinite;
+    cursor: pointer;
+  }
+  @keyframes hover {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-12px); }
+  }
+  .ghost {
+    position: relative; width: 100%; height: 100%;
+    transition: transform 0.3s ease, filter 0.5s ease;
+  }
+  .ghost.petting { animation: wiggle 0.4s ease-in-out; }
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(0); }
+    25% { transform: rotate(-5deg); }
+    75% { transform: rotate(5deg); }
+  }
+
+  /* ===== EMOTION ANIMATIONS ===== */
+  /* Happy: bouncing with extra hover */
+  .ghost-wrap.emotion-happy { animation: happyBounce 0.6s ease-in-out 3; }
+  @keyframes happyBounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-30px); }
+  }
+
+  /* Sad: shoulders down, slow droop */
+  .ghost-wrap.emotion-sad { animation: sadDroop 1.2s ease-in-out; }
+  @keyframes sadDroop {
+    0% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(8px) scale(0.97, 1.03); }
+    100% { transform: translateX(-50%) translateY(0); }
+  }
+
+  /* Angry/Annoyed: rapid shake */
+  .ghost-wrap.emotion-angry { animation: angryShake 0.5s ease-in-out 2; }
+  @keyframes angryShake {
+    0%, 100% { transform: translateX(-50%); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(calc(-50% - 8px)); }
+    20%, 40%, 60%, 80% { transform: translateX(calc(-50% + 8px)); }
+  }
+
+  /* Love: pulsing with hearts */
+  .ghost-wrap.emotion-love { animation: lovePulse 0.8s ease-in-out 2; }
+  @keyframes lovePulse {
+    0%, 100% { transform: translateX(-50%) scale(1); }
+    50% { transform: translateX(-50%) scale(1.08); }
+  }
+
+  /* Surprised: jump back */
+  .ghost-wrap.emotion-surprise { animation: surpriseJump 0.6s ease-out; }
+  @keyframes surpriseJump {
+    0% { transform: translateX(-50%) translateY(0); }
+    30% { transform: translateX(-50%) translateY(-25px) scale(1.1); }
+    100% { transform: translateX(-50%) translateY(0) scale(1); }
+  }
+
+  /* Eating: lean forward and back, with body squish */
+  .ghost-wrap.emotion-eating { animation: eatingMotion 1.6s ease-in-out; }
+  @keyframes eatingMotion {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    20% { transform: translateX(-50%) translateY(-5px) scale(1.05, 0.95); }
+    40% { transform: translateX(-50%) translateY(0) scale(0.95, 1.05); }
+    60% { transform: translateX(-50%) translateY(-5px) scale(1.05, 0.95); }
+    80% { transform: translateX(-50%) translateY(0) scale(0.95, 1.05); }
+  }
+
+  /* Drinking: tilt back */
+  .ghost-wrap.emotion-drinking { animation: drinkingMotion 1.4s ease-in-out; }
+  @keyframes drinkingMotion {
+    0%, 100% { transform: translateX(-50%) rotate(0); }
+    30% { transform: translateX(-50%) rotate(-8deg); }
+    60% { transform: translateX(-50%) rotate(-12deg); }
+  }
+
+  /* Mouth open while eating */
+  .ghost.eating .mouth {
+    width: 26px !important;
+    height: 22px !important;
+    border-radius: 50% !important;
+    top: 74px !important;
+    background: #1a0830;
+  }
+  .ghost.chewing .mouth {
+    animation: chew 0.25s ease-in-out infinite;
+  }
+  @keyframes chew {
+    0%, 100% { width: 26px; height: 22px; }
+    50% { width: 20px; height: 14px; }
+  }
+
+  /* Eyes wide for surprise */
+  .ghost.surprised .eye {
+    width: 18px;
+    height: 22px;
+  }
+
+  /* Eyes squint for happy big */
+  .ghost.veryHappy .eye {
+    height: 6px !important;
+    border-radius: 50% !important;
+    transform: scaleY(0.5);
+    background: #1a0830;
+  }
+  .ghost.veryHappy .eye::after { display: none; }
+  .ghost.veryHappy .mouth {
+    width: 28px;
+    height: 14px;
+  }
+
+  /* Heart eyes for love */
+  .ghost.lovestruck .eye {
+    background: transparent;
+    border-radius: 0;
+    width: 16px;
+    height: 16px;
+  }
+  .ghost.lovestruck .eye::after {
+    display: block;
+    content: '♥';
+    position: absolute;
+    top: -3px; left: -3px;
+    width: auto; height: auto;
+    background: transparent;
+    color: #ff4d7a;
+    font-size: 20px;
+    text-shadow: 0 0 6px #ff4d7a;
+    border-radius: 0;
+    animation: heartBeat 0.6s ease-in-out infinite;
+  }
+  @keyframes heartBeat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.25); }
+  }
+
+  /* ===== FOOD ITEM FLYING IN ===== */
+  .food-item {
+    position: absolute;
+    font-size: 36px;
+    z-index: 10;
+    pointer-events: none;
+    filter: drop-shadow(0 0 10px rgba(212, 184, 122, 0.6));
+  }
+  .food-item.flying {
+    animation: foodFlyIn 1.6s ease-in-out forwards;
+  }
+  @keyframes foodFlyIn {
+    0% {
+      left: 100%;
+      top: 30%;
+      transform: scale(0.5) rotate(0deg);
+      opacity: 0;
+    }
+    20% {
+      opacity: 1;
+      transform: scale(1) rotate(180deg);
+    }
+    50% {
+      left: 50%;
+      top: 35%;
+      transform: translateX(-50%) scale(1.2) rotate(360deg);
+      opacity: 1;
+    }
+    80% {
+      left: 50%;
+      top: 50%;
+      transform: translateX(-50%) scale(0.7) rotate(540deg);
+      opacity: 0.8;
+    }
+    100% {
+      left: 50%;
+      top: 55%;
+      transform: translateX(-50%) scale(0) rotate(720deg);
+      opacity: 0;
+    }
+  }
+
+  /* ===== FLOATING REACTION (hearts, sparks, etc) ===== */
+  .reaction {
+    position: absolute;
+    font-size: 24px;
+    pointer-events: none;
+    z-index: 15;
+    animation: reactionFloat 1.8s ease-out forwards;
+  }
+  @keyframes reactionFloat {
+    0% { transform: translateY(0) scale(0); opacity: 0; }
+    20% { transform: translateY(-15px) scale(1.2); opacity: 1; }
+    100% { transform: translateY(-80px) scale(0.8); opacity: 0; }
+  }
+
+  /* Steam/aura after eating special food */
+  .food-aura {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 4;
+  }
+  .food-aura.active {
+    animation: foodAuraPulse 1.5s ease-out forwards;
+  }
+  @keyframes foodAuraPulse {
+    0% { opacity: 0; transform: scale(0.5); }
+    40% { opacity: 0.7; transform: scale(1.4); }
+    100% { opacity: 0; transform: scale(2); }
+  }
+
+  /* Sparkle burst around ghost */
+  .sparkle-burst {
+    position: absolute;
+    pointer-events: none;
+    z-index: 12;
+    font-size: 20px;
+    animation: sparkleBurst 1.2s ease-out forwards;
+  }
+  @keyframes sparkleBurst {
+    0% {
+      transform: translate(0, 0) scale(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(var(--dx), var(--dy)) scale(1.2);
+      opacity: 0;
+    }
+  }
+
+  /* ===== POOP (caca espectral) ===== */
+  .poop {
+    position: absolute;
+    font-size: 26px;
+    cursor: pointer;
+    z-index: 6;
+    animation: poopAppear 0.4s ease-out;
+    filter: drop-shadow(0 0 6px rgba(100, 80, 50, 0.5));
+  }
+  .poop::after {
+    content: '';
+    position: absolute;
+    inset: -10px;
+    background: radial-gradient(circle, rgba(140, 100, 50, 0.3), transparent 60%);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: stink 2s ease-in-out infinite;
+    z-index: -1;
+  }
+  @keyframes poopAppear {
+    0% { transform: scale(0) translateY(-20px); opacity: 0; }
+    60% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+  }
+  @keyframes stink {
+    0%, 100% { opacity: 0.3; transform: scale(0.9); }
+    50% { opacity: 0.7; transform: scale(1.2); }
+  }
+  .poop .stink-line {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    opacity: 0;
+    animation: stinkRise 2.5s ease-in-out infinite;
+    color: rgba(140, 180, 100, 0.7);
+  }
+  @keyframes stinkRise {
+    0% { transform: translateX(-50%) translateY(0); opacity: 0; }
+    30% { opacity: 1; }
+    100% { transform: translateX(-50%) translateY(-25px); opacity: 0; }
+  }
+  .poop.cleaning {
+    animation: poopClean 0.6s ease-out forwards;
+  }
+  @keyframes poopClean {
+    0% { transform: scale(1) rotate(0); opacity: 1; }
+    50% { transform: scale(1.3) rotate(180deg); opacity: 0.8; }
+    100% { transform: scale(0) rotate(360deg); opacity: 0; }
+  }
+
+  /* Blessed sanctum glow */
+  .sanctum.blessed::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(212, 184, 122, 0.08), transparent 70%);
+    pointer-events: none;
+    animation: blessedGlow 4s ease-in-out infinite;
+  }
+  @keyframes blessedGlow {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+
+  /* Cleaning tool sweep animation */
+  .cleaning-tool {
+    position: absolute;
+    font-size: 40px;
+    z-index: 20;
+    pointer-events: none;
+    animation: cleanSweep 0.8s ease-out forwards;
+  }
+  @keyframes cleanSweep {
+    0% {
+      transform: translateY(-50px) rotate(-30deg) scale(1.2);
+      opacity: 0;
+    }
+    30% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(0) rotate(30deg) scale(0.8);
+      opacity: 0;
+    }
+  }
+
+  /* ===== FURNITURE & DECORATION ===== */
+  .furniture {
+    position: absolute;
+    bottom: 18px;
+    left: 16px;
+    font-size: 42px;
+    z-index: 3;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+    animation: furnitureFlicker 4s ease-in-out infinite;
+  }
+  @keyframes furnitureFlicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.92; }
+  }
+
+  .decoration {
+    position: absolute;
+    top: 14px;
+    left: 18px;
+    font-size: 28px;
+    z-index: 3;
+    filter: drop-shadow(0 0 8px rgba(184, 168, 232, 0.4));
+    animation: decorationFloat 5s ease-in-out infinite;
+  }
+  @keyframes decorationFloat {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-6px) rotate(3deg); }
+  }
+
+  /* Stink penalty visual on stat */
+  .stat.stinky {
+    border-color: rgba(140, 180, 100, 0.5);
+    box-shadow: 0 0 12px rgba(140, 180, 100, 0.2);
+  }
+
+  /* Aura container */
+  .aura {
+    position: absolute;
+    bottom: -8px; left: 50%;
+    transform: translateX(-50%);
+    width: 130px; height: 130px;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+    filter: blur(20px);
+  }
+  .aura.active { opacity: 0.8; }
+  .aura.purple { background: radial-gradient(circle, var(--accent-purple), transparent 70%); }
+  .aura.cyan { background: radial-gradient(circle, var(--accent-cyan), transparent 70%); }
+  .aura.gold { background: radial-gradient(circle, var(--accent-gold), transparent 70%); }
+  .aura.red { background: radial-gradient(circle, var(--accent-red), transparent 70%); }
+  .aura.green { background: radial-gradient(circle, var(--accent-green), transparent 70%); }
+
+  .ghost-body {
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 100px; height: 120px;
+    background: linear-gradient(180deg, var(--ghost) 0%, rgba(232, 228, 240, 0.7));
+    border-radius: 50px 50px 30% 30%;
+    clip-path: polygon(
+      0% 35%, 5% 25%, 15% 15%, 30% 8%, 50% 5%, 70% 8%, 85% 15%, 95% 25%, 100% 35%,
+      100% 88%, 92% 100%, 85% 90%, 78% 100%, 70% 92%, 62% 100%, 55% 90%, 50% 100%, 45% 90%, 38% 100%, 30% 92%, 22% 100%, 15% 90%, 8% 100%, 0% 88%
+    );
+    box-shadow: inset 0 -10px 30px rgba(184, 168, 232, 0.3);
+  }
+
+  .eye {
+    position: absolute;
+    width: 13px; height: 17px;
+    background: #1a0830;
+    border-radius: 50%;
+    top: 48px;
+    transition: all 0.3s ease;
+  }
+  .eye-l { left: 30px; }
+  .eye-r { right: 30px; }
+  .eye::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 4px; height: 4px;
+    background: white; border-radius: 50%;
+  }
+  .ghost.sleeping .eye { height: 2px; border-radius: 2px; }
+  .ghost.sleeping .eye::after { display: none; }
+  .ghost.sad .eye { transform: rotate(180deg); height: 12px; }
+  .ghost.sad .mouth { width: 14px; border-radius: 14px 14px 0 0; top: 78px; }
+  .ghost.happy .mouth { width: 22px; height: 12px; }
+
+  .mouth {
+    position: absolute;
+    width: 16px; height: 9px;
+    background: #1a0830;
+    border-radius: 0 0 16px 16px;
+    top: 76px; left: 50%;
+    transform: translateX(-50%);
+    transition: all 0.3s ease;
+  }
+
+  .blush {
+    position: absolute;
+    width: 10px; height: 5px;
+    background: rgba(255, 77, 122, 0.5);
+    border-radius: 50%;
+    top: 72px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .blush-l { left: 22px; }
+  .blush-r { right: 22px; }
+  .ghost.happy .blush { opacity: 1; }
+
+  .zzz {
+    position: absolute;
+    top: 8px; right: -18px;
+    font-family: 'Cinzel', serif;
+    font-size: 22px;
+    color: var(--ghost-glow);
+    opacity: 0;
+    font-weight: 600;
+  }
+  .ghost.sleeping .zzz {
+    opacity: 1;
+    animation: zzz-float 2s ease-in-out infinite;
+  }
+  @keyframes zzz-float {
+    0% { transform: translateY(0); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateY(-30px); opacity: 0; }
+  }
+
+  .thought {
+    position: absolute;
+    top: -10px; right: -10px;
+    background: var(--bg-mid);
+    border: 1px solid rgba(122, 77, 255, 0.4);
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 16px;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.3s ease;
+  }
+  .thought.show { opacity: 1; transform: scale(1); }
+
+  /* ===== HAT (cosmetic) ===== */
+  .hat {
+    position: absolute;
+    top: -20px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 36px;
+    z-index: 5;
+    line-height: 1;
+    display: none;
+  }
+  .hat.show { display: block; }
+
+  .mood-text {
+    position: absolute;
+    bottom: 6px; left: 50%;
+    transform: translateX(-50%);
+    font-style: italic;
+    font-size: 12px;
+    color: var(--text-faded);
+    letter-spacing: 0.05em;
+    text-align: center;
+    width: 90%;
+  }
+
+  /* ===== STATS ===== */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .stat {
+    background: var(--bg-card);
+    border: 1px solid rgba(122, 77, 255, 0.15);
+    border-radius: 12px;
+    padding: 10px 12px;
+  }
+  .stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .stat-label {
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--text-faded);
+    text-transform: uppercase;
+  }
+  .stat-value {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    color: var(--accent-gold);
+    font-weight: 600;
+  }
+  .bar {
+    height: 5px;
+    background: rgba(10, 6, 18, 0.8);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-purple), var(--ghost-glow));
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+  .bar-fill.low { background: linear-gradient(90deg, var(--accent-red), #ff8a4d); }
+  .bar-fill.med { background: linear-gradient(90deg, var(--accent-gold), #e8d4a0); }
+
+  /* ===== MAIN ACTION TABS ===== */
+  .main-actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .main-btn {
+    background: linear-gradient(135deg, rgba(122, 77, 255, 0.15), rgba(20, 9, 31, 0.8));
+    border: 1px solid rgba(122, 77, 255, 0.3);
+    border-radius: 14px;
+    padding: 12px 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    color: var(--ghost);
+    font-family: 'Cormorant Garamond', serif;
+  }
+  .main-btn:active {
+    transform: scale(0.95);
+    background: linear-gradient(135deg, rgba(122, 77, 255, 0.3), rgba(40, 20, 60, 0.9));
+  }
+  .main-btn-icon { font-size: 20px; }
+  .main-btn-label {
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-faded);
+  }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    text-align: center;
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--text-faded);
+    font-style: italic;
+    letter-spacing: 0.1em;
+  }
+  .footer .ornament { color: var(--accent-gold); margin: 0 6px; }
+
+  /* ===== MODAL (Generic) ===== */
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 2, 10, 0.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 16px;
+  }
+  .modal.show { display: flex; }
+  .modal-panel {
+    background: var(--bg-mid);
+    border: 1px solid rgba(122, 77, 255, 0.4);
+    border-radius: 20px;
+    padding: 20px;
+    max-width: 420px;
+    width: 100%;
+    max-height: 90dvh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(122, 77, 255, 0.3);
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .modal-title {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    letter-spacing: 0.25em;
+    color: var(--accent-gold);
+    text-transform: uppercase;
+  }
+  .modal-close {
+    background: none;
+    border: 1px solid rgba(122, 77, 255, 0.3);
+    color: var(--ghost);
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+  }
+  .modal-close:active { background: rgba(122, 77, 255, 0.2); }
+
+  /* Naming modal specific */
+  .modal-content {
+    text-align: center;
+    padding: 32px 24px;
+  }
+  .modal-desc {
+    font-style: italic;
+    font-size: 14px;
+    color: var(--text-faded);
+    margin-bottom: 18px;
+    line-height: 1.5;
+  }
+  .modal-input {
+    width: 100%;
+    background: rgba(10, 6, 18, 0.8);
+    border: 1px solid rgba(122, 77, 255, 0.3);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: var(--ghost);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    text-align: center;
+    margin-bottom: 16px;
+    letter-spacing: 0.1em;
+  }
+  .modal-input:focus {
+    outline: none;
+    border-color: var(--accent-purple);
+    box-shadow: 0 0 20px rgba(122, 77, 255, 0.3);
+  }
+  .modal-btn {
+    background: linear-gradient(135deg, var(--accent-purple), #5a2dd0);
+    border: none;
+    border-radius: 10px;
+    padding: 11px 28px;
+    color: white;
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+  .modal-btn:active { transform: scale(0.95); }
+  .modal-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ===== ITEM LIST (food/shop) ===== */
+  .item-list { display: flex; flex-direction: column; gap: 8px; }
+  .item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, rgba(122, 77, 255, 0.08), rgba(20, 9, 31, 0.6));
+    border: 1px solid rgba(122, 77, 255, 0.2);
+    border-radius: 12px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .item:active { background: rgba(122, 77, 255, 0.15); }
+  .item.locked { opacity: 0.5; cursor: not-allowed; }
+  .item.equipped { border-color: var(--accent-gold); box-shadow: 0 0 16px rgba(212, 184, 122, 0.2); }
+  .item-icon {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(122, 77, 255, 0.3), rgba(10, 6, 18, 0.8));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .item-info { flex: 1; min-width: 0; }
+  .item-name {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--ghost);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .item-desc {
+    font-style: italic;
+    font-size: 12px;
+    color: var(--text-faded);
+    line-height: 1.3;
+  }
+  .item-action {
+    background: linear-gradient(135deg, var(--accent-purple), #5a2dd0);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .item-action.gold { background: linear-gradient(135deg, var(--accent-gold), #a08a5a); color: #1a0830; }
+  .item-action:disabled { opacity: 0.4; }
+  .item-cost {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--accent-gold);
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  /* ===== TABS ===== */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 14px;
+    padding: 4px;
+    background: rgba(10, 6, 18, 0.6);
+    border-radius: 10px;
+    border: 1px solid rgba(122, 77, 255, 0.15);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex: 1;
+    min-width: max-content;
+    padding: 8px 10px;
+    background: none;
+    border: none;
+    color: var(--text-faded);
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+  .tab.active {
+    background: linear-gradient(135deg, rgba(122, 77, 255, 0.3), rgba(40, 20, 60, 0.6));
+    color: var(--ghost);
+  }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ===== GAME CANVAS ===== */
+  .game-area {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    max-height: 60dvh;
+    background: linear-gradient(180deg, rgba(20, 9, 31, 0.8), rgba(10, 6, 18, 0.95));
+    border: 1px solid rgba(122, 77, 255, 0.3);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    touch-action: none;
+  }
+  .game-canvas { display: block; width: 100%; height: 100%; }
+  .game-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 4px;
+    margin-bottom: 10px;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--ghost);
+  }
+  .game-info .info-label { color: var(--text-faded); font-size: 9px; margin-right: 4px; }
+  .game-info .info-val { color: var(--accent-gold); font-size: 13px; }
+
+  /* Memory cards grid */
+  .memory-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 12px;
+    height: 100%;
+  }
+  .mem-card {
+    background: linear-gradient(135deg, rgba(122, 77, 255, 0.3), rgba(40, 20, 60, 0.8));
+    border: 1px solid rgba(122, 77, 255, 0.5);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    transform-style: preserve-3d;
+  }
+  .mem-card.flipped {
+    background: linear-gradient(135deg, var(--bg-mid), rgba(40, 20, 60, 0.9));
+    border-color: var(--accent-gold);
+  }
+  .mem-card .face { display: none; }
+  .mem-card.flipped .face { display: block; }
+  .mem-card.matched {
+    background: linear-gradient(135deg, rgba(77, 255, 170, 0.2), rgba(40, 60, 50, 0.8));
+    border-color: var(--accent-green);
+    opacity: 0.7;
+  }
+
+  /* Tarot cards */
+  .tarot-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 16px;
+    padding: 16px;
+  }
+  .tarot-deck {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  .tarot-card {
+    width: 70px;
+    height: 110px;
+    background: linear-gradient(135deg, var(--bg-mid), rgba(40, 20, 60, 0.9));
+    border: 2px solid var(--accent-purple);
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  .tarot-card:active { transform: translateY(-4px); }
+  .tarot-card.revealed {
+    background: linear-gradient(135deg, rgba(212, 184, 122, 0.2), rgba(60, 40, 20, 0.8));
+    border-color: var(--accent-gold);
+  }
+  .tarot-card .back {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-purple);
+    font-size: 28px;
+  }
+  .tarot-card.revealed .back { display: none; }
+  .tarot-prompt {
+    font-style: italic;
+    color: var(--text-faded);
+    text-align: center;
+    font-size: 14px;
+  }
+  .tarot-result {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    color: var(--accent-gold);
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  /* Reflex game */
+  .reflex-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 18px;
+    padding: 16px;
+  }
+  .reflex-prompt {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--text-faded);
+    text-transform: uppercase;
+    text-align: center;
+  }
+  .reflex-target {
+    font-size: 60px;
+    animation: pulse-target 1s ease-in-out infinite;
+  }
+  @keyframes pulse-target {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+  }
+  .reflex-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    width: 100%;
+    max-width: 280px;
+  }
+  .reflex-opt {
+    aspect-ratio: 1;
+    background: linear-gradient(135deg, rgba(122, 77, 255, 0.2), rgba(20, 9, 31, 0.8));
+    border: 1px solid rgba(122, 77, 255, 0.4);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .reflex-opt:active { transform: scale(0.9); }
+  .reflex-opt.correct { background: rgba(77, 255, 170, 0.3); border-color: var(--accent-green); }
+  .reflex-opt.wrong { background: rgba(255, 77, 122, 0.3); border-color: var(--accent-red); }
+
+  /* Game over */
+  .game-end {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 20px;
+    text-align: center;
+  }
+  .game-end.show { display: flex; }
+  .game-end-title {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    letter-spacing: 0.25em;
+    color: var(--accent-gold);
+    text-transform: uppercase;
+  }
+  .game-end-score {
+    font-family: 'Cinzel', serif;
+    font-size: 28px;
+    color: var(--ghost);
+  }
+  .game-end-reward {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--accent-gold);
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    margin-top: 4px;
+  }
+
+  /* Game launcher grid */
+  .game-launcher {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .game-card {
+    background: linear-gradient(135deg, rgba(122, 77, 255, 0.12), rgba(20, 9, 31, 0.8));
+    border: 1px solid rgba(122, 77, 255, 0.3);
+    border-radius: 14px;
+    padding: 16px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+  }
+  .game-card:active {
+    transform: scale(0.96);
+    background: linear-gradient(135deg, rgba(122, 77, 255, 0.25), rgba(40, 20, 60, 0.9));
+  }
+  .game-card-icon { font-size: 36px; margin-bottom: 6px; }
+  .game-card-name {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--ghost);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .game-card-desc {
+    font-style: italic;
+    font-size: 11px;
+    color: var(--text-faded);
+    line-height: 1.3;
+  }
+
+  /* Ending overlay */
+  .ending {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 2, 10, 0.95);
+    backdrop-filter: blur(12px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 30px;
+    text-align: center;
+  }
+  .ending.show { display: flex; }
+  .ending-content { max-width: 320px; }
+  .ending-title {
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    letter-spacing: 0.3em;
+    color: var(--accent-gold);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .ending-text {
+    font-style: italic;
+    font-size: 15px;
+    color: var(--ghost);
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+  .tap-hint {
+    position: absolute;
+    bottom: 6px; right: 10px;
+    font-size: 9px;
+    color: var(--text-faded);
+    font-style: italic;
+    letter-spacing: 0.1em;
+  }
+
+  /* Clean button (appears when poops exist) */
+  .clean-btn {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: linear-gradient(135deg, rgba(140, 180, 100, 0.3), rgba(60, 90, 40, 0.8));
+    border: 1px solid rgba(140, 180, 100, 0.5);
+    border-radius: 20px;
+    padding: 8px 14px;
+    color: var(--ghost);
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    gap: 6px;
+    z-index: 8;
+    animation: cleanBtnPulse 1.5s ease-in-out infinite;
+    box-shadow: 0 0 16px rgba(140, 180, 100, 0.3);
+  }
+  .clean-btn.show { display: flex; }
+  .clean-btn:active { transform: scale(0.95); }
+  @keyframes cleanBtnPulse {
+    0%, 100% { box-shadow: 0 0 16px rgba(140, 180, 100, 0.3); }
+    50% { box-shadow: 0 0 24px rgba(140, 180, 100, 0.6); }
+  }
+  .clean-btn-count {
+    background: rgba(255, 77, 122, 0.8);
+    color: white;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 700;
+  }
+
+  @keyframes sparkle-up {
+    0% { transform: translateY(0) scale(0.5); opacity: 1; }
+    100% { transform: translateY(-60px) scale(1.2); opacity: 0; }
+  }
+  .sparkle {
+    position: absolute;
+    color: var(--accent-gold);
+    font-size: 20px;
+    pointer-events: none;
+    animation: sparkle-up 1.2s ease-out forwards;
+  }
+
+  /* Floating coin reward */
+  @keyframes coin-pop {
+    0% { transform: translateY(0) scale(0.5); opacity: 0; }
+    20% { transform: translateY(-20px) scale(1.2); opacity: 1; }
+    80% { transform: translateY(-50px) scale(1); opacity: 1; }
+    100% { transform: translateY(-80px) scale(0.8); opacity: 0; }
+  }
+  .coin-pop {
+    position: fixed;
+    color: var(--accent-gold);
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 18px;
+    pointer-events: none;
+    z-index: 300;
+    animation: coin-pop 1.5s ease-out forwards;
+    text-shadow: 0 0 10px rgba(212, 184, 122, 0.6);
+  }
+
+  /* Section header inside modals */
+  .section-title {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--text-faded);
+    text-transform: uppercase;
+    margin: 12px 0 8px;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 30px 16px;
+    color: var(--text-faded);
+    font-style: italic;
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+
+<div class="orbs" id="orbs"></div>
+
+<div class="container">
+  <header>
+    <div class="brand">SpiritPet</div>
+    <div class="coins">
+      <span class="coins-icon">✦</span>
+      <span id="coinsVal">0</span>
+    </div>
+  </header>
+
+  <div class="identity">
+    <div class="pet-name" id="petName">···</div>
+    <div class="pet-stage" id="petStage">recién manifestado</div>
+  </div>
+
+  <div class="notice" id="notice">
+    <div id="noticeIcon">⚠</div>
+    <div class="notice-text" id="noticeText"></div>
+  </div>
+
+  <div class="sanctum" id="sanctum">
+    <div class="celestial sun" id="celestial"></div>
+    <div class="stars" id="stars"></div>
+    <div class="decoration" id="decoration"></div>
+    <div class="furniture" id="furniture"></div>
+
+    <div class="ghost-wrap" id="ghostWrap">
+      <div class="aura" id="aura"></div>
+      <div class="food-aura" id="foodAura"></div>
+      <div class="ghost" id="ghost">
+        <div class="hat" id="hat"></div>
+        <div class="ghost-body"></div>
+        <div class="eye eye-l"></div>
+        <div class="eye eye-r"></div>
+        <div class="blush blush-l"></div>
+        <div class="blush blush-r"></div>
+        <div class="mouth"></div>
+        <div class="zzz">Z</div>
+        <div class="thought" id="thought">✦</div>
+      </div>
+    </div>
+
+    <div class="mood-text" id="moodText">tu espíritu está contigo</div>
+    <div class="tap-hint">toca para acariciar</div>
+    <button class="clean-btn" id="cleanBtn">
+      🧹 Limpiar <span class="clean-btn-count" id="cleanBtnCount">1</span>
+    </button>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-header"><div class="stat-label">Alimento</div><div class="stat-value" id="hungerVal">100</div></div>
+      <div class="bar"><div class="bar-fill" id="hungerBar" style="width:100%"></div></div>
+    </div>
+    <div class="stat">
+      <div class="stat-header"><div class="stat-label">Esencia</div><div class="stat-value" id="thirstVal">100</div></div>
+      <div class="bar"><div class="bar-fill" id="thirstBar" style="width:100%"></div></div>
+    </div>
+    <div class="stat">
+      <div class="stat-header"><div class="stat-label">Ánimo</div><div class="stat-value" id="happyVal">100</div></div>
+      <div class="bar"><div class="bar-fill" id="happyBar" style="width:100%"></div></div>
+    </div>
+    <div class="stat">
+      <div class="stat-header"><div class="stat-label">Energía</div><div class="stat-value" id="energyVal">100</div></div>
+      <div class="bar"><div class="bar-fill" id="energyBar" style="width:100%"></div></div>
+    </div>
+  </div>
+
+  <div class="main-actions">
+    <button class="main-btn" data-modal="food">
+      <div class="main-btn-icon">🌙</div>
+      <div class="main-btn-label">Comida</div>
+    </button>
+    <button class="main-btn" data-modal="games">
+      <div class="main-btn-icon">✦</div>
+      <div class="main-btn-label">Jugar</div>
+    </button>
+    <button class="main-btn" id="sleepBtn">
+      <div class="main-btn-icon" id="sleepIcon">☾</div>
+      <div class="main-btn-label" id="sleepLabel">Dormir</div>
+    </button>
+    <button class="main-btn" data-modal="shop">
+      <div class="main-btn-icon">⚜</div>
+      <div class="main-btn-label">Tienda</div>
+    </button>
+  </div>
+
+  <div class="footer">
+    <span id="ageDisplay">edad: 0 días</span>
+    <span class="ornament">✦</span>
+    <span id="timeDisplay">día</span>
+    <span class="ornament">✦</span>
+    <span id="evoStage">forma 1/4</span>
+  </div>
+</div>
+
+<!-- Naming modal -->
+<div class="modal" id="nameModal">
+  <div class="modal-panel modal-content">
+    <div class="modal-title">Un nuevo espíritu</div>
+    <div class="modal-desc">Un alma errante ha decidido acompañarte. Otórgale un nombre para anclarla a este plano.</div>
+    <input class="modal-input" id="nameInput" placeholder="su nombre..." maxlength="14">
+    <button class="modal-btn" id="nameBtn">invocar</button>
+  </div>
+</div>
+
+<!-- Food modal -->
+<div class="modal" id="foodModal">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <div class="modal-title">Ofrendas espectrales</div>
+      <button class="modal-close" data-close="foodModal">✕</button>
+    </div>
+    <div class="item-list" id="foodList"></div>
+  </div>
+</div>
+
+<!-- Games launcher modal -->
+<div class="modal" id="gamesModal">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <div class="modal-title">Mini-juegos</div>
+      <button class="modal-close" data-close="gamesModal">✕</button>
+    </div>
+    <div class="game-launcher" id="gameLauncher"></div>
+  </div>
+</div>
+
+<!-- Shop modal -->
+<div class="modal" id="shopModal">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <div class="modal-title">Tienda etérea</div>
+      <button class="modal-close" data-close="shopModal">✕</button>
+    </div>
+    <div class="tabs" style="flex-wrap: wrap;">
+      <button class="tab active" data-tab="hats">Sombreros</button>
+      <button class="tab" data-tab="auras">Auras</button>
+      <button class="tab" data-tab="cleaners">Limpieza</button>
+      <button class="tab" data-tab="furniture">Muebles</button>
+      <button class="tab" data-tab="decorations">Deco</button>
+      <button class="tab" data-tab="backgrounds">Fondos</button>
+    </div>
+    <div class="tab-panel active" id="tab-hats"><div class="item-list" id="hatsList"></div></div>
+    <div class="tab-panel" id="tab-auras"><div class="item-list" id="aurasList"></div></div>
+    <div class="tab-panel" id="tab-cleaners"><div class="item-list" id="cleanersList"></div></div>
+    <div class="tab-panel" id="tab-furniture"><div class="item-list" id="furnitureList"></div></div>
+    <div class="tab-panel" id="tab-decorations"><div class="item-list" id="decorationsList"></div></div>
+    <div class="tab-panel" id="tab-backgrounds"><div class="item-list" id="backgroundsList"></div></div>
+  </div>
+</div>
+
+<!-- Game modal (active gameplay) -->
+<div class="modal" id="gameModal">
+  <div class="modal-panel" style="padding: 16px;">
+    <div class="modal-header">
+      <div class="modal-title" id="gameTitle">Juego</div>
+      <button class="modal-close" id="gameClose">✕</button>
+    </div>
+    <div class="game-info" id="gameInfo">
+      <div><span class="info-label">PUNTOS</span><span class="info-val" id="gameScore">0</span></div>
+      <div><span class="info-label">TIEMPO</span><span class="info-val" id="gameTime">30</span></div>
+    </div>
+    <div class="game-area" id="gameArea"></div>
+    <div class="game-end" id="gameEnd">
+      <div class="game-end-title">Fin del juego</div>
+      <div class="game-end-score" id="gameEndScore">0</div>
+      <div class="game-end-reward">
+        <span>✦</span>
+        <span id="gameEndCoins">0</span>
+      </div>
+      <button class="modal-btn" id="gameRestart">Reintentar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ending overlay -->
+<div class="ending" id="ending">
+  <div class="ending-content">
+    <div class="ending-title">Se ha ido</div>
+    <div class="ending-text" id="endingText"></div>
+    <button class="modal-btn" id="newSpiritBtn">invocar nuevo espíritu</button>
+  </div>
+</div>
+
+<script>
+// ============ DATA ============
+const FOODS = [
+  { id: 'soul', name: 'Almas en pena', icon: '🕯', desc: 'Alimento básico para todo espíritu', hunger: 25, thirst: 0, happy: 0, cost: 0, unlock: 0 },
+  { id: 'moon', name: 'Esencia de luna', icon: '🌙', desc: 'Hidrata profundamente con luz lunar', hunger: 5, thirst: 40, happy: 5, cost: 0, unlock: 0 },
+  { id: 'ecto', name: 'Ectoplasma', icon: '🟢', desc: 'Sube el ánimo además de alimentar', hunger: 20, thirst: 10, happy: 25, cost: 0, unlock: 0 },
+  { id: 'incense', name: 'Nube de incienso', icon: '🌫', desc: 'Recupera todas las energías un poco', hunger: 15, thirst: 15, happy: 15, energy: 15, cost: 0, unlock: 0 },
+  { id: 'relic', name: 'Reliquia rara', icon: '⚱', desc: 'Restaura todas las energías al máximo. Se desbloquea con edad.', hunger: 100, thirst: 100, happy: 100, energy: 100, cost: 0, unlock: 3 }
+];
+
+const GAMES = [
+  { id: 'pong', name: 'Mini-Pong', icon: '🏓', desc: 'Atrapa bolitas de luz con la paleta' },
+  { id: 'memory', name: 'Memoria', icon: '🔮', desc: 'Encuentra parejas de símbolos paranormales' },
+  { id: 'orbs', name: 'Caza-orbes', icon: '✨', desc: 'Toca los orbes antes de que se desvanezcan' },
+  { id: 'tarot', name: 'Tarot', icon: '🎴', desc: 'Adivina qué carta es la afortunada' },
+  { id: 'reflex', name: 'Reflejos', icon: '⚡', desc: 'Toca el símbolo correcto lo más rápido posible' }
+];
+
+const HATS = [
+  { id: 'none', name: 'Sin sombrero', icon: '—', cost: 0 },
+  { id: 'witch', name: 'Sombrero de bruja', icon: '🧙\u200d♀️', cost: 30 },
+  { id: 'crown', name: 'Corona dorada', icon: '👑', cost: 80 },
+  { id: 'top', name: 'Chistera victoriana', icon: '🎩', cost: 50 },
+  { id: 'flower', name: 'Corona de flores', icon: '🌸', cost: 40 },
+  { id: 'horns', name: 'Cuernos diabólicos', icon: '😈', cost: 60 },
+  { id: 'halo', name: 'Halo divino', icon: '😇', cost: 100 },
+  { id: 'party', name: 'Gorro de fiesta', icon: '🎉', cost: 25 },
+  { id: 'graduation', name: 'Birrete', icon: '🎓', cost: 45 }
+];
+
+const AURAS = [
+  { id: 'none', name: 'Sin aura', icon: '○', color: null, cost: 0 },
+  { id: 'purple', name: 'Aura púrpura', icon: '🟣', color: 'purple', cost: 20 },
+  { id: 'cyan', name: 'Aura cian', icon: '🔵', color: 'cyan', cost: 35 },
+  { id: 'gold', name: 'Aura dorada', icon: '🟡', color: 'gold', cost: 70 },
+  { id: 'red', name: 'Aura carmesí', icon: '🔴', color: 'red', cost: 50 },
+  { id: 'green', name: 'Aura esmeralda', icon: '🟢', color: 'green', cost: 55 }
+];
+
+const TAROT_CARDS = [
+  { icon: '☀', name: 'El Sol' },
+  { icon: '☾', name: 'La Luna' },
+  { icon: '★', name: 'La Estrella' },
+  { icon: '⚱', name: 'La Reliquia' },
+  { icon: '✦', name: 'El Espíritu' }
+];
+
+const REFLEX_SYMBOLS = ['☾', '★', '✦', '☀', '⚱', '☥', '⚜', '♆', '♅'];
+
+const CLEANERS = [
+  { id: 'broom', name: 'Escoba de mimbre', icon: '🧹', desc: 'Limpia 1 caca rápidamente', uses: 5, cost: 15 },
+  { id: 'holy', name: 'Agua bendita', icon: '💧', desc: 'Purifica 2 cacas a la vez', uses: 3, cost: 30 },
+  { id: 'salt', name: 'Sal sagrada', icon: '🧂', desc: 'Bendice el sanctum: previene caca durante 30 min', uses: 2, cost: 50 },
+  { id: 'sage', name: 'Manojo de salvia', icon: '🌿', desc: 'Limpia todas las cacas y purifica el ambiente', uses: 1, cost: 80 }
+];
+
+const BACKGROUNDS = [
+  { id: 'default', name: 'Velo etéreo', icon: '🌌', cost: 0,
+    bg: 'radial-gradient(ellipse at center 70%, rgba(122, 77, 255, 0.25) 0%, transparent 60%), linear-gradient(180deg, rgba(20, 9, 31, 0.4), rgba(10, 6, 18, 0.9))' },
+  { id: 'crypt', name: 'Cripta antigua', icon: '⚰', cost: 60,
+    bg: 'radial-gradient(ellipse at center 60%, rgba(80, 60, 40, 0.3) 0%, transparent 60%), linear-gradient(180deg, rgba(40, 30, 20, 0.6), rgba(15, 10, 5, 0.95))' },
+  { id: 'forest', name: 'Bosque embrujado', icon: '🌲', cost: 75,
+    bg: 'radial-gradient(ellipse at center 70%, rgba(40, 80, 60, 0.3) 0%, transparent 60%), linear-gradient(180deg, rgba(15, 30, 25, 0.7), rgba(5, 15, 10, 0.95))' },
+  { id: 'mansion', name: 'Mansión victoriana', icon: '🏚', cost: 90,
+    bg: 'radial-gradient(ellipse at center 70%, rgba(120, 60, 80, 0.25) 0%, transparent 60%), linear-gradient(180deg, rgba(40, 20, 30, 0.7), rgba(15, 5, 10, 0.95))' },
+  { id: 'cosmic', name: 'Vacío cósmico', icon: '🌠', cost: 120,
+    bg: 'radial-gradient(ellipse at 30% 30%, rgba(77, 255, 240, 0.2) 0%, transparent 50%), radial-gradient(ellipse at 70% 70%, rgba(255, 77, 122, 0.2) 0%, transparent 50%), linear-gradient(180deg, rgba(10, 5, 30, 0.8), rgba(0, 0, 10, 0.95))' },
+  { id: 'fire', name: 'Llamas del infierno', icon: '🔥', cost: 100,
+    bg: 'radial-gradient(ellipse at center 90%, rgba(255, 77, 50, 0.5) 0%, transparent 60%), linear-gradient(180deg, rgba(50, 10, 5, 0.7), rgba(20, 2, 0, 0.95))' }
+];
+
+const FURNITURE = [
+  { id: 'none', name: 'Vacío', icon: '—', cost: 0, emoji: '', position: 'left' },
+  { id: 'candle', name: 'Vela ritual', icon: '🕯', cost: 15, emoji: '🕯️', position: 'left' },
+  { id: 'crystal', name: 'Bola de cristal', icon: '🔮', cost: 35, emoji: '🔮', position: 'left' },
+  { id: 'cauldron', name: 'Caldero', icon: '🪔', cost: 45, emoji: '🪔', position: 'left' },
+  { id: 'spider', name: 'Telaraña', icon: '🕸', cost: 20, emoji: '🕸️', position: 'left' },
+  { id: 'book', name: 'Grimorio', icon: '📖', cost: 30, emoji: '📖', position: 'left' },
+  { id: 'skull', name: 'Calavera mística', icon: '💀', cost: 40, emoji: '💀', position: 'left' },
+  { id: 'pumpkin', name: 'Calabaza encantada', icon: '🎃', cost: 25, emoji: '🎃', position: 'left' }
+];
+
+const DECORATIONS = [
+  { id: 'none', name: 'Sin decoración', icon: '—', cost: 0, emoji: '' },
+  { id: 'bats', name: 'Murciélagos', icon: '🦇', cost: 30, emoji: '🦇' },
+  { id: 'ghost', name: 'Mini-fantasmas', icon: '👻', cost: 50, emoji: '👻' },
+  { id: 'cat', name: 'Gato negro', icon: '🐈\u200d⬛', cost: 65, emoji: '🐈‍⬛' },
+  { id: 'crow', name: 'Cuervo guardián', icon: '🐦\u200d⬛', cost: 55, emoji: '🐦‍⬛' },
+  { id: 'moon', name: 'Luna llena', icon: '🌕', cost: 70, emoji: '🌕' }
+];
+
+// ============ STATE ============
+const STORAGE_KEY = 'spiritpet_state_v3';
+const DEFAULT_STATE = {
+  name: '',
+  born: Date.now(),
+  lastUpdate: Date.now(),
+  hunger: 100,
+  thirst: 100,
+  happy: 100,
+  energy: 100,
+  sleeping: false,
+  stage: 0,
+  dead: false,
+  deathReason: '',
+  lastNotified: 0,
+  coins: 10,
+  hat: 'none',
+  aura: 'none',
+  ownedHats: ['none'],
+  ownedAuras: ['none'],
+  // New: cleaning & furniture
+  poops: [], // array of {id, x, y, age}
+  cleaners: { broom: 0, holy: 0, salt: 0, sage: 0 }, // remaining uses
+  blessedUntil: 0,
+  background: 'default',
+  furniture: 'none',
+  decoration: 'none',
+  ownedBackgrounds: ['default'],
+  ownedFurniture: ['none'],
+  ownedDecorations: ['none'],
+  ownedCleaners: [] // ids of cleaners ever bought (for re-purchase tracking)
+};
+
+let state = loadState();
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return { ...DEFAULT_STATE, ...JSON.parse(raw) };
+  } catch(e) { return null; }
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+// ============ ELEMENTS ============
+const $ = id => document.getElementById(id);
+const ghost = $('ghost');
+const sanctum = $('sanctum');
+const celestial = $('celestial');
+const ghostWrap = $('ghostWrap');
+
+// ============ INIT ============
+function init() {
+  spawnOrbs();
+  spawnStars();
+  if (!state || !state.name) {
+    $('nameModal').classList.add('show');
+    setTimeout(() => $('nameInput').focus(), 100);
+  } else {
+    catchUpTime();
+    render();
+  }
+  // Register SW
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+}
+
+$('nameBtn').addEventListener('click', () => {
+  const n = $('nameInput').value.trim();
+  if (!n) return;
+  state = { ...DEFAULT_STATE, name: n.slice(0, 14), born: Date.now(), lastUpdate: Date.now() };
+  saveState();
+  $('nameModal').classList.remove('show');
+  render();
+});
+$('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('nameBtn').click(); });
+
+$('newSpiritBtn').addEventListener('click', () => {
+  state = null;
+  localStorage.removeItem(STORAGE_KEY);
+  $('ending').classList.remove('show');
+  $('nameInput').value = '';
+  $('nameModal').classList.add('show');
+});
+
+// ============ TIME ============
+function catchUpTime() {
+  const now = Date.now();
+  const elapsedMs = now - state.lastUpdate;
+  const minutes = elapsedMs / 60000;
+
+  const hungerDecay = state.sleeping ? 0.15 : 0.4;
+  const thirstDecay = state.sleeping ? 0.2 : 0.5;
+  const happyDecay = 0.3;
+  const energyDecay = state.sleeping ? -1.2 : 0.25;
+
+  state.hunger = Math.max(0, state.hunger - hungerDecay * minutes);
+  state.thirst = Math.max(0, state.thirst - thirstDecay * minutes);
+  state.happy = Math.max(0, state.happy - happyDecay * minutes);
+  state.energy = Math.min(100, Math.max(0, state.energy - energyDecay * minutes));
+  
+  // Poop penalty
+  applyPoopPenalty(minutes);
+
+  if (state.sleeping && state.energy >= 100) state.sleeping = false;
+
+  const ageDays = (now - state.born) / 86400000;
+  if (ageDays < 1) state.stage = 0;
+  else if (ageDays < 3) state.stage = 1;
+  else if (ageDays < 7) state.stage = 2;
+  else state.stage = 3;
+
+  if (state.hunger === 0 && state.thirst === 0 && minutes > 30) {
+    state.dead = true;
+    state.deathReason = 'sin alimento ni esencia, su forma se ha disipado';
+  } else if (state.happy === 0 && minutes > 60) {
+    state.dead = true;
+    state.deathReason = 'la tristeza lo ha llevado de vuelta al velo';
+  }
+
+  state.lastUpdate = now;
+  saveState();
+}
+
+// ============ MODALS ============
+document.querySelectorAll('[data-modal]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (state.dead) return;
+    if (state.sleeping) { 
+      showThought('💤'); 
+      triggerEmotion('angry');
+      return; 
+    }
+    const m = btn.dataset.modal;
+    if (m === 'food') renderFoodList();
+    if (m === 'games') renderGameLauncher();
+    if (m === 'shop') renderShop();
+    $(m + 'Modal').classList.add('show');
+  });
+});
+document.querySelectorAll('[data-close]').forEach(btn => {
+  btn.addEventListener('click', () => $(btn.dataset.close).classList.remove('show'));
+});
+
+// Tab switching in shop
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const t = tab.dataset.tab;
+    document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.tab === t));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + t));
+  });
+});
+
+// Sleep button
+$('sleepBtn').addEventListener('click', () => {
+  if (state.dead) return;
+  catchUpTime();
+  state.sleeping = !state.sleeping;
+  showThought(state.sleeping ? '☾' : '☀');
+  saveState();
+  render();
+});
+
+// Clean button
+$('cleanBtn').addEventListener('click', e => {
+  e.stopPropagation();
+  if (!state.poops || state.poops.length === 0) return;
+  // Clean the first poop
+  cleanPoop(state.poops[0].id);
+});
+
+// Tap ghost to pet
+ghostWrap.addEventListener('click', () => {
+  if (state.dead || state.sleeping) return;
+  catchUpTime();
+  state.happy = Math.min(100, state.happy + 4);
+  ghost.classList.add('petting');
+  setTimeout(() => ghost.classList.remove('petting'), 400);
+  
+  // Spawn floating heart
+  const heart = document.createElement('div');
+  heart.className = 'reaction';
+  heart.textContent = '♡';
+  heart.style.color = '#ff4d7a';
+  heart.style.left = (40 + Math.random() * 20) + '%';
+  heart.style.top = '25%';
+  ghostWrap.appendChild(heart);
+  setTimeout(() => heart.remove(), 1800);
+  
+  // If happiness is already very high, trigger love animation occasionally
+  if (state.happy > 80 && Math.random() < 0.3) {
+    triggerEmotion('love');
+  }
+  
+  saveState();
+  render();
+});
+
+// ============ FOOD ============
+function renderFoodList() {
+  const list = $('foodList');
+  list.innerHTML = '';
+  const ageDays = (Date.now() - state.born) / 86400000;
+  FOODS.forEach(food => {
+    const locked = ageDays < food.unlock;
+    const div = document.createElement('div');
+    div.className = 'item' + (locked ? ' locked' : '');
+    const energyText = food.energy ? ` · Energía +${food.energy}` : '';
+    div.innerHTML = `
+      <div class="item-icon">${food.icon}</div>
+      <div class="item-info">
+        <div class="item-name">${food.name}</div>
+        <div class="item-desc">${food.desc}${locked ? ' · 🔒 ' + food.unlock + 'd' : ''}</div>
+      </div>
+      <button class="item-action" ${locked ? 'disabled' : ''}>Ofrecer</button>
+    `;
+    if (!locked) {
+      div.querySelector('button').addEventListener('click', e => {
+        e.stopPropagation();
+        feedPet(food);
+      });
+    }
+    list.appendChild(div);
+  });
+}
+function feedPet(food) {
+  catchUpTime();
+  $('foodModal').classList.remove('show');
+  
+  // Apply stats after animation
+  setTimeout(() => {
+    state.hunger = Math.min(100, state.hunger + food.hunger);
+    state.thirst = Math.min(100, state.thirst + food.thirst);
+    state.happy = Math.min(100, state.happy + food.happy);
+    if (food.energy) state.energy = Math.min(100, state.energy + food.energy);
+    saveState();
+    render();
+  }, 1600);
+  
+  playEatingAnimation(food);
+  
+  // Schedule poop spawn (15-45 seconds after eating)
+  // Unless sanctum is blessed by sal sagrada
+  if (Date.now() > state.blessedUntil) {
+    // Probability based on food type
+    const poopChance = {
+      soul: 0.55,
+      moon: 0.25,   // drinks don't poop as much
+      ecto: 0.65,
+      incense: 0.4,
+      relic: 0.85   // big meal = bigger poop
+    };
+    if (Math.random() < (poopChance[food.id] || 0.5)) {
+      const delay = 15000 + Math.random() * 30000;
+      setTimeout(() => {
+        if (state && !state.dead) spawnPoop();
+      }, delay);
+    }
+  }
+}
+
+function playEatingAnimation(food) {
+  const sanctum = $('sanctum');
+  const ghost = $('ghost');
+  const wrap = $('ghostWrap');
+  const foodAura = $('foodAura');
+  
+  // 1. Food flies in from the right
+  const foodEl = document.createElement('div');
+  foodEl.className = 'food-item flying';
+  foodEl.textContent = food.icon;
+  sanctum.appendChild(foodEl);
+  
+  // 2. Ghost reacts - surprised at first, then eats
+  setTimeout(() => {
+    wrap.classList.add('emotion-surprise');
+    ghost.classList.add('surprised');
+    setTimeout(() => {
+      ghost.classList.remove('surprised');
+      wrap.classList.remove('emotion-surprise');
+    }, 600);
+  }, 200);
+  
+  // 3. Eating motion (mouth open + chewing)
+  const isDrink = food.id === 'moon'; // Esencia de luna = drink animation
+  setTimeout(() => {
+    if (isDrink) {
+      wrap.classList.add('emotion-drinking');
+    } else {
+      wrap.classList.add('emotion-eating');
+    }
+    ghost.classList.add('eating', 'chewing');
+  }, 800);
+  
+  // 4. After eating, show aura/reaction based on food type
+  setTimeout(() => {
+    ghost.classList.remove('eating', 'chewing');
+    wrap.classList.remove('emotion-eating', 'emotion-drinking');
+    
+    // Food-specific reactions
+    const auraColors = {
+      soul: 'rgba(232, 228, 240, 0.6)',
+      moon: 'rgba(184, 168, 232, 0.7)',
+      ecto: 'rgba(77, 255, 170, 0.7)',
+      incense: 'rgba(212, 184, 122, 0.6)',
+      relic: 'rgba(212, 184, 122, 0.9)'
+    };
+    foodAura.style.background = `radial-gradient(circle, ${auraColors[food.id]}, transparent 70%)`;
+    foodAura.classList.add('active');
+    setTimeout(() => foodAura.classList.remove('active'), 1500);
+    
+    // Reaction emotes
+    if (food.id === 'ecto' || food.id === 'incense') {
+      // Happy reaction
+      wrap.classList.add('emotion-happy');
+      ghost.classList.add('veryHappy');
+      spawnReactions(['✨', '💜', '✦'], 5);
+      setTimeout(() => {
+        wrap.classList.remove('emotion-happy');
+        ghost.classList.remove('veryHappy');
+      }, 1800);
+    } else if (food.id === 'relic') {
+      // EPIC reaction
+      wrap.classList.add('emotion-love');
+      ghost.classList.add('lovestruck');
+      spawnReactions(['✦', '⚜', '★', '♥', '✨'], 10);
+      sparkleBurst();
+      setTimeout(() => {
+        wrap.classList.remove('emotion-love');
+        ghost.classList.remove('lovestruck');
+      }, 2400);
+    } else if (food.id === 'moon') {
+      // Calm satisfaction
+      ghost.classList.add('veryHappy');
+      spawnReactions(['💧', '✨', '☾'], 4);
+      setTimeout(() => ghost.classList.remove('veryHappy'), 1500);
+    } else {
+      // Basic food - just a little smile
+      ghost.classList.add('veryHappy');
+      spawnReactions(['✦'], 3);
+      setTimeout(() => ghost.classList.remove('veryHappy'), 1200);
+    }
+  }, 1600);
+}
+
+function spawnReactions(emojis, count) {
+  const wrap = $('ghostWrap');
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const r = document.createElement('div');
+      r.className = 'reaction';
+      r.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      r.style.left = (20 + Math.random() * 80) + '%';
+      r.style.top = (10 + Math.random() * 40) + '%';
+      r.style.color = ['#d4b87a', '#ff4d7a', '#b8a8e8', '#4dffaa'][Math.floor(Math.random() * 4)];
+      wrap.appendChild(r);
+      setTimeout(() => r.remove(), 1800);
+    }, i * 120);
+  }
+}
+
+function sparkleBurst() {
+  const wrap = $('ghostWrap');
+  const symbols = ['✦', '✨', '⚜', '★'];
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2;
+    const distance = 80 + Math.random() * 40;
+    const dx = Math.cos(angle) * distance;
+    const dy = Math.sin(angle) * distance;
+    const s = document.createElement('div');
+    s.className = 'sparkle-burst';
+    s.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+    s.style.left = '50%';
+    s.style.top = '50%';
+    s.style.color = ['#d4b87a', '#b8a8e8', '#ff4d7a'][Math.floor(Math.random() * 3)];
+    s.style.setProperty('--dx', dx + 'px');
+    s.style.setProperty('--dy', dy + 'px');
+    wrap.appendChild(s);
+    setTimeout(() => s.remove(), 1200);
+  }
+}
+
+// ============ POOP SYSTEM ============
+const POOP_EMOJIS = ['💩', '🟫'];
+
+function spawnPoop() {
+  if (!state || state.dead) return;
+  // Generate random position within sanctum (avoiding ghost area)
+  const sanctumRect = $('sanctum').getBoundingClientRect();
+  const w = sanctumRect.width;
+  const h = sanctumRect.height;
+  
+  // Avoid center bottom (ghost area) - place on sides
+  let x, y;
+  if (Math.random() < 0.5) {
+    // Right side
+    x = 65 + Math.random() * 25;
+  } else {
+    // Left side  
+    x = 5 + Math.random() * 25;
+  }
+  y = 60 + Math.random() * 25;
+  
+  const poop = {
+    id: 'p_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+    x: x,
+    y: y,
+    bornAt: Date.now()
+  };
+  state.poops.push(poop);
+  saveState();
+  renderPoops();
+  updateCleanBtn();
+  
+  // Ghost reacts with disgust
+  showThought('😖');
+  $('ghostWrap').classList.add('emotion-sad');
+  setTimeout(() => $('ghostWrap').classList.remove('emotion-sad'), 1200);
+}
+
+function renderPoops() {
+  // Remove existing poop elements
+  document.querySelectorAll('.poop').forEach(el => el.remove());
+  
+  if (!state.poops || state.poops.length === 0) return;
+  
+  const sanctum = $('sanctum');
+  state.poops.forEach(p => {
+    const el = document.createElement('div');
+    el.className = 'poop';
+    el.textContent = '💩';
+    el.style.left = p.x + '%';
+    el.style.top = p.y + '%';
+    el.dataset.id = p.id;
+    el.innerHTML = '💩<span class="stink-line">~</span>';
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      // Tap directly on poop = use default cleaner
+      cleanPoop(p.id);
+    });
+    sanctum.appendChild(el);
+  });
+}
+
+function cleanPoop(poopId) {
+  // Try to use available cleaner: prefer broom, then holy, then sage
+  let usedCleaner = null;
+  let cleanCount = 1;
+  
+  if ((state.cleaners.broom || 0) > 0) {
+    state.cleaners.broom--;
+    usedCleaner = 'broom';
+    cleanCount = 1;
+  } else if ((state.cleaners.holy || 0) > 0) {
+    state.cleaners.holy--;
+    usedCleaner = 'holy';
+    cleanCount = 2;
+  } else if ((state.cleaners.sage || 0) > 0) {
+    state.cleaners.sage--;
+    usedCleaner = 'sage';
+    cleanCount = 999;
+  } else {
+    // No cleaner available
+    showCleanerWarning();
+    return;
+  }
+  
+  // Animate and remove
+  const tools = { broom: '🧹', holy: '💧', sage: '🌿' };
+  const toolEl = document.createElement('div');
+  toolEl.className = 'cleaning-tool';
+  toolEl.textContent = tools[usedCleaner];
+  
+  if (cleanCount >= 999) {
+    // Sage cleans all
+    state.poops.forEach((p, idx) => {
+      const poopEl = document.querySelector(`.poop[data-id="${p.id}"]`);
+      if (poopEl) {
+        poopEl.classList.add('cleaning');
+        setTimeout(() => poopEl.remove(), 600);
+      }
+    });
+    // Sage also gives ambient boost
+    state.happy = Math.min(100, state.happy + 5);
+    spawnReactions(['🌿', '✨'], 5);
+    state.poops = [];
+  } else {
+    // Clean specific poops (broom=1, holy=2)
+    let toClean = [poopId];
+    if (cleanCount === 2 && state.poops.length > 1) {
+      const others = state.poops.filter(p => p.id !== poopId).slice(0, 1);
+      others.forEach(o => toClean.push(o.id));
+    }
+    toClean.forEach(id => {
+      const poopEl = document.querySelector(`.poop[data-id="${id}"]`);
+      if (poopEl) {
+        const r = poopEl.getBoundingClientRect();
+        const sr = $('sanctum').getBoundingClientRect();
+        const cloneTool = toolEl.cloneNode(true);
+        cloneTool.style.left = (r.left - sr.left + r.width/2 - 20) + 'px';
+        cloneTool.style.top = (r.top - sr.top - 20) + 'px';
+        $('sanctum').appendChild(cloneTool);
+        setTimeout(() => cloneTool.remove(), 800);
+        
+        poopEl.classList.add('cleaning');
+        setTimeout(() => poopEl.remove(), 600);
+      }
+    });
+    state.poops = state.poops.filter(p => !toClean.includes(p.id));
+  }
+  
+  saveState();
+  updateCleanBtn();
+  render();
+  
+  // Reward: ghost happy after cleaning
+  setTimeout(() => {
+    state.happy = Math.min(100, state.happy + 3);
+    saveState();
+    render();
+    triggerEmotion('happy');
+  }, 700);
+}
+
+function useSalt() {
+  if ((state.cleaners.salt || 0) <= 0) {
+    showCleanerWarning();
+    return;
+  }
+  state.cleaners.salt--;
+  state.blessedUntil = Date.now() + 30 * 60 * 1000; // 30 min
+  saveState();
+  
+  // Visual feedback
+  spawnReactions(['🧂', '✨', '⚜'], 8);
+  showThought('⚜');
+  triggerEmotion('happy');
+  render();
+}
+
+function updateCleanBtn() {
+  const btn = $('cleanBtn');
+  const count = $('cleanBtnCount');
+  if (state.poops && state.poops.length > 0) {
+    btn.classList.add('show');
+    count.textContent = state.poops.length;
+  } else {
+    btn.classList.remove('show');
+  }
+}
+
+function showCleanerWarning() {
+  showThought('🧹❌');
+  // Open shop on cleaners tab
+  setTimeout(() => {
+    $('shopModal').classList.add('show');
+    renderShop();
+    // Switch to cleaners tab
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'cleaners'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-cleaners'));
+  }, 600);
+}
+
+// Poop impact: each poop drains happiness over time
+function applyPoopPenalty(minutesElapsed) {
+  if (!state.poops || state.poops.length === 0) return;
+  // Each poop drains 0.5 happy per minute
+  const drain = state.poops.length * 0.5 * minutesElapsed;
+  state.happy = Math.max(0, state.happy - drain);
+}
+
+// Trigger emotion animation manually
+function triggerEmotion(emotion) {
+  const wrap = $('ghostWrap');
+  const ghost = $('ghost');
+  const emotionClass = 'emotion-' + emotion;
+  wrap.classList.add(emotionClass);
+  
+  if (emotion === 'happy') {
+    ghost.classList.add('veryHappy');
+    setTimeout(() => ghost.classList.remove('veryHappy'), 1800);
+  } else if (emotion === 'love') {
+    ghost.classList.add('lovestruck');
+    spawnReactions(['♥', '💜'], 4);
+    setTimeout(() => ghost.classList.remove('lovestruck'), 1800);
+  } else if (emotion === 'surprise') {
+    ghost.classList.add('surprised');
+    setTimeout(() => ghost.classList.remove('surprised'), 600);
+  }
+  
+  setTimeout(() => wrap.classList.remove(emotionClass), 2000);
+}
+
+// ============ SHOP ============
+function renderShop() {
+  renderShopSection('hats', HATS, state.ownedHats, state.hat, 'hat');
+  renderShopSection('auras', AURAS, state.ownedAuras, state.aura, 'aura');
+  renderShopSection('backgrounds', BACKGROUNDS, state.ownedBackgrounds, state.background, 'background');
+  renderShopSection('furniture', FURNITURE, state.ownedFurniture, state.furniture, 'furniture');
+  renderShopSection('decorations', DECORATIONS, state.ownedDecorations, state.decoration, 'decoration');
+  renderCleanersShop();
+}
+
+function renderCleanersShop() {
+  const list = $('cleanersList');
+  list.innerHTML = '';
+  
+  // Salt usage button (only if owned)
+  if ((state.cleaners.salt || 0) > 0) {
+    const blessed = Date.now() < state.blessedUntil;
+    const blessedMin = blessed ? Math.ceil((state.blessedUntil - Date.now()) / 60000) : 0;
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+      <div class="item-icon">🧂</div>
+      <div class="item-info">
+        <div class="item-name">Sal sagrada (${state.cleaners.salt} usos)</div>
+        <div class="item-desc">${blessed ? `Bendito por ${blessedMin} min más` : 'Activa para prevenir cacas 30 min'}</div>
+      </div>
+      <button class="item-action" ${blessed ? 'disabled' : ''}>${blessed ? 'Activo' : 'Usar'}</button>
+    `;
+    if (!blessed) {
+      div.querySelector('button').addEventListener('click', e => {
+        e.stopPropagation();
+        useSalt();
+        renderShop();
+      });
+    }
+    list.appendChild(div);
+  }
+  
+  // Show purchase items
+  CLEANERS.forEach(item => {
+    const owned = state.cleaners[item.id] || 0;
+    const canAfford = state.coins >= item.cost;
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+      <div class="item-icon">${item.icon}</div>
+      <div class="item-info">
+        <div class="item-name">${item.name} ${owned > 0 ? `(x${owned})` : ''}</div>
+        <div class="item-desc">${item.desc}</div>
+      </div>
+      <div class="item-cost"><span>✦</span><span>${item.cost}</span></div>
+      <button class="item-action gold" ${canAfford ? '' : 'disabled'}>+${item.uses}</button>
+    `;
+    const btn = div.querySelector('button');
+    if (canAfford) {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        if (state.coins < item.cost) return;
+        state.coins -= item.cost;
+        state.cleaners[item.id] = (state.cleaners[item.id] || 0) + item.uses;
+        saveState();
+        render();
+        renderShop();
+      });
+    }
+    list.appendChild(div);
+  });
+}
+function renderShopSection(type, items, owned, equipped, stateKey) {
+  const list = $(type + 'List');
+  list.innerHTML = '';
+  items.forEach(item => {
+    const isOwned = owned.includes(item.id);
+    const isEquipped = equipped === item.id;
+    const canAfford = state.coins >= item.cost;
+    const div = document.createElement('div');
+    div.className = 'item' + (isEquipped ? ' equipped' : '');
+    let actionHTML;
+    if (isEquipped) {
+      actionHTML = '<button class="item-action gold" disabled>Equipado</button>';
+    } else if (isOwned) {
+      actionHTML = '<button class="item-action">Equipar</button>';
+    } else {
+      actionHTML = `<div class="item-cost"><span>✦</span><span>${item.cost}</span></div><button class="item-action gold" ${canAfford ? '' : 'disabled'}>Comprar</button>`;
+    }
+    div.innerHTML = `
+      <div class="item-icon">${item.icon}</div>
+      <div class="item-info">
+        <div class="item-name">${item.name}</div>
+        <div class="item-desc">${isOwned ? (isEquipped ? 'En uso ahora' : 'En tu colección') : 'Cosmético etéreo'}</div>
+      </div>
+      ${actionHTML}
+    `;
+    const btn = div.querySelector('button.item-action');
+    if (btn && !btn.disabled) {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        if (isOwned) {
+          // Equip
+          state[stateKey] = item.id;
+        } else {
+          // Buy
+          if (state.coins < item.cost) return;
+          state.coins -= item.cost;
+          owned.push(item.id);
+          state[stateKey] = item.id;
+        }
+        saveState();
+        render();
+        renderShop();
+      });
+    }
+    list.appendChild(div);
+  });
+}
+
+// ============ COINS ============
+function addCoins(amount, btnEl) {
+  state.coins += amount;
+  saveState();
+  $('coinsVal').textContent = state.coins;
+  // floating coin
+  const cp = document.createElement('div');
+  cp.className = 'coin-pop';
+  cp.textContent = `+${amount} ✦`;
+  if (btnEl) {
+    const r = btnEl.getBoundingClientRect();
+    cp.style.left = (r.left + r.width/2 - 20) + 'px';
+    cp.style.top = r.top + 'px';
+  } else {
+    cp.style.left = '50%';
+    cp.style.top = '50%';
+    cp.style.transform = 'translateX(-50%)';
+  }
+  document.body.appendChild(cp);
+  setTimeout(() => cp.remove(), 1500);
+}
+
+// ============ GAMES ============
+$('gameClose').addEventListener('click', () => {
+  stopGame();
+  $('gameModal').classList.remove('show');
+});
+
+function renderGameLauncher() {
+  const grid = $('gameLauncher');
+  grid.innerHTML = '';
+  GAMES.forEach(g => {
+    const div = document.createElement('div');
+    div.className = 'game-card';
+    div.innerHTML = `
+      <div class="game-card-icon">${g.icon}</div>
+      <div class="game-card-name">${g.name}</div>
+      <div class="game-card-desc">${g.desc}</div>
+    `;
+    div.addEventListener('click', () => {
+      $('gamesModal').classList.remove('show');
+      startGame(g.id);
+    });
+    grid.appendChild(div);
+  });
+}
+
+let currentGame = null;
+let gameLoop = null;
+let gameTimer = null;
+let gameState = {};
+
+function startGame(id) {
+  const game = GAMES.find(g => g.id === id);
+  $('gameTitle').textContent = game.name;
+  $('gameEnd').classList.remove('show');
+  $('gameArea').innerHTML = '';
+  $('gameArea').style.display = '';
+  $('gameInfo').style.display = '';
+  currentGame = id;
+  gameState = { score: 0, time: 30 };
+  $('gameScore').textContent = 0;
+  $('gameTime').textContent = 30;
+  $('gameModal').classList.add('show');
+  
+  if (id === 'pong') initPong();
+  else if (id === 'memory') initMemory();
+  else if (id === 'orbs') initOrbs();
+  else if (id === 'tarot') initTarot();
+  else if (id === 'reflex') initReflex();
+}
+
+function endGame() {
+  stopGame();
+  const score = gameState.score;
+  const coins = Math.max(1, Math.floor(score / 3) + 2);
+  $('gameEndScore').textContent = score;
+  $('gameEndCoins').textContent = coins;
+  $('gameEnd').classList.add('show');
+  $('gameArea').style.display = 'none';
+  $('gameInfo').style.display = 'none';
+  addCoins(coins);
+  catchUpTime();
+  state.happy = Math.min(100, state.happy + 15);
+  state.energy = Math.max(0, state.energy - 8);
+  saveState();
+  render();
+  
+  // Trigger happy emotion after game close
+  if (score >= 5) {
+    setTimeout(() => {
+      if (!$('gamesModal').classList.contains('show') && !$('gameModal').classList.contains('show')) {
+        triggerEmotion('happy');
+        spawnReactions(['✦', '✨'], 4);
+      }
+    }, 200);
+  }
+}
+
+function stopGame() {
+  if (gameLoop) { cancelAnimationFrame(gameLoop); gameLoop = null; }
+  if (gameTimer) { clearInterval(gameTimer); gameTimer = null; }
+}
+
+$('gameRestart').addEventListener('click', () => {
+  if (currentGame) startGame(currentGame);
+});
+
+function startTimer(seconds, onEnd) {
+  gameState.time = seconds;
+  $('gameTime').textContent = seconds;
+  gameTimer = setInterval(() => {
+    gameState.time--;
+    $('gameTime').textContent = gameState.time;
+    if (gameState.time <= 0) {
+      clearInterval(gameTimer);
+      gameTimer = null;
+      onEnd();
+    }
+  }, 1000);
+}
+
+// ===== PONG =====
+function initPong() {
+  const area = $('gameArea');
+  const canvas = document.createElement('canvas');
+  canvas.className = 'game-canvas';
+  area.appendChild(canvas);
+  
+  function resize() {
+    const r = area.getBoundingClientRect();
+    canvas.width = r.width;
+    canvas.height = r.height;
+  }
+  resize();
+  
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  // Paddle gets smaller as score increases
+  const paddle = { x: W/2, y: H - 30, w: 80, h: 10 };
+  const balls = [];
+  let spawnTimer = 0;
+  let lives = 3;
+  $('gameTime').textContent = '❤❤❤';
+  
+  function spawnBall() {
+    // Difficulty scales with score
+    const speedBoost = Math.min(4, gameState.score * 0.1);
+    balls.push({
+      x: 20 + Math.random() * (W - 40),
+      y: -10,
+      vx: (Math.random() - 0.5) * (2 + speedBoost * 0.4),
+      vy: 2.5 + Math.random() * 2 + speedBoost,
+      r: 8,
+      color: ['#7a4dff', '#4dfff0', '#d4b87a', '#ff4d7a'][Math.floor(Math.random() * 4)],
+      // Some balls are evil (red) - they subtract more
+      evil: Math.random() < Math.min(0.3, gameState.score * 0.02)
+    });
+    // Sometimes spawn multiple at once at high score
+    if (gameState.score > 15 && Math.random() < 0.3) {
+      setTimeout(spawnBall, 200);
+    }
+  }
+  
+  function setPaddle(clientX) {
+    const r = canvas.getBoundingClientRect();
+    paddle.x = Math.max(paddle.w/2, Math.min(W - paddle.w/2, clientX - r.left));
+  }
+  canvas.addEventListener('touchmove', e => { e.preventDefault(); setPaddle(e.touches[0].clientX); }, { passive: false });
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); setPaddle(e.touches[0].clientX); }, { passive: false });
+  canvas.addEventListener('mousemove', e => setPaddle(e.clientX));
+  
+  function draw() {
+    ctx.fillStyle = 'rgba(10, 6, 18, 0.3)';
+    ctx.fillRect(0, 0, W, H);
+    
+    // Paddle shrinks at higher scores
+    paddle.w = Math.max(40, 80 - Math.floor(gameState.score / 5) * 4);
+    
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = '#7a4dff';
+    ctx.fillStyle = '#e8e4f0';
+    ctx.fillRect(paddle.x - paddle.w/2, paddle.y, paddle.w, paddle.h);
+    ctx.shadowBlur = 0;
+    
+    for (let i = balls.length - 1; i >= 0; i--) {
+      const b = balls[i];
+      b.x += b.vx;
+      b.y += b.vy;
+      if (b.x < b.r || b.x > W - b.r) b.vx *= -1;
+      
+      if (b.y + b.r >= paddle.y && b.y - b.r <= paddle.y + paddle.h
+          && b.x >= paddle.x - paddle.w/2 && b.x <= paddle.x + paddle.w/2 && b.vy > 0) {
+        if (b.evil) {
+          // Evil ball penalizes
+          lives--;
+          $('gameTime').textContent = '❤'.repeat(Math.max(0, lives));
+        } else {
+          gameState.score++;
+          $('gameScore').textContent = gameState.score;
+        }
+        balls.splice(i, 1);
+        continue;
+      }
+      
+      if (b.y > H + 20) {
+        balls.splice(i, 1);
+        if (!b.evil) {
+          lives--;
+          $('gameTime').textContent = '❤'.repeat(Math.max(0, lives));
+          if (lives <= 0) {
+            setTimeout(endGame, 300);
+            return;
+          }
+        }
+        continue;
+      }
+      
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = b.evil ? '#ff0030' : b.color;
+      ctx.fillStyle = b.evil ? '#ff0030' : b.color;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      ctx.fill();
+      if (b.evil) {
+        ctx.fillStyle = '#000';
+        ctx.font = '10px serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('✗', b.x, b.y + 4);
+      }
+      ctx.shadowBlur = 0;
+    }
+    
+    spawnTimer++;
+    // Faster spawns as score grows
+    const spawnRate = Math.max(20, 80 - gameState.score * 2);
+    if (spawnTimer > spawnRate) {
+      spawnBall();
+      spawnTimer = 0;
+    }
+  }
+  
+  function loop() {
+    if (lives <= 0) return;
+    draw();
+    gameLoop = requestAnimationFrame(loop);
+  }
+  loop();
+  // No time limit - lives based
+}
+
+// ===== MEMORY =====
+function initMemory() {
+  const symbols = ['☾', '☀', '★', '✦', '⚱', '☥', '⚜', '♆'];
+  const cards = [...symbols, ...symbols].sort(() => Math.random() - 0.5);
+  const area = $('gameArea');
+  area.innerHTML = '';
+  const grid = document.createElement('div');
+  grid.className = 'memory-grid';
+  area.appendChild(grid);
+  
+  let flipped = [];
+  let matched = 0;
+  let busy = false;
+  
+  cards.forEach((sym, i) => {
+    const card = document.createElement('div');
+    card.className = 'mem-card';
+    card.dataset.sym = sym;
+    card.innerHTML = `<span class="face">${sym}</span>`;
+    card.addEventListener('click', () => {
+      if (busy || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+      card.classList.add('flipped');
+      flipped.push(card);
+      if (flipped.length === 2) {
+        busy = true;
+        setTimeout(() => {
+          if (flipped[0].dataset.sym === flipped[1].dataset.sym) {
+            flipped.forEach(c => c.classList.add('matched'));
+            matched++;
+            gameState.score += 10;
+            $('gameScore').textContent = gameState.score;
+            if (matched === symbols.length) {
+              gameState.score += gameState.time * 2; // time bonus
+              $('gameScore').textContent = gameState.score;
+              setTimeout(endGame, 600);
+            }
+          } else {
+            flipped.forEach(c => c.classList.remove('flipped'));
+          }
+          flipped = [];
+          busy = false;
+        }, 700);
+      }
+    });
+    grid.appendChild(card);
+  });
+  
+  startTimer(60, endGame);
+}
+
+// ===== ORBS (catch) =====
+function initOrbs() {
+  const area = $('gameArea');
+  area.style.position = 'relative';
+  let spawnInterval;
+  
+  function spawn() {
+    const r = area.getBoundingClientRect();
+    const orb = document.createElement('div');
+    // Smaller orbs as score grows
+    const baseSize = Math.max(25, 50 - gameState.score * 0.5);
+    const size = baseSize + Math.random() * 15;
+    
+    // 20% chance of bad orb at higher scores (penalizes if tapped)
+    const isBad = gameState.score > 5 && Math.random() < Math.min(0.25, gameState.score * 0.015);
+    // 10% chance of bonus orb (golden, +3)
+    const isBonus = !isBad && Math.random() < 0.1;
+    
+    let color;
+    if (isBad) color = '#ff0030';
+    else if (isBonus) color = '#ffd700';
+    else color = ['#7a4dff', '#4dfff0', '#d4b87a', '#ff4d7a', '#4dffaa'][Math.floor(Math.random() * 5)];
+    
+    const startX = Math.random() * (r.width - size);
+    const startY = Math.random() * (r.height - size);
+    
+    orb.style.cssText = `
+      position: absolute;
+      width: ${size}px; height: ${size}px;
+      left: ${startX}px;
+      top: ${startY}px;
+      background: radial-gradient(circle, ${color}, transparent);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 20px ${color};
+      animation: orbFade ${Math.max(0.9, 2 - gameState.score * 0.03)}s ease-out forwards;
+    `;
+    
+    if (isBad) {
+      orb.innerHTML = `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#000;font-size:${size*0.5}px;font-weight:bold;">✗</div>`;
+    } else if (isBonus) {
+      orb.innerHTML = `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#000;font-size:${size*0.5}px;">★</div>`;
+    }
+    
+    // Higher scores: orbs move
+    if (gameState.score > 8) {
+      const vx = (Math.random() - 0.5) * Math.min(3, gameState.score * 0.15);
+      const vy = (Math.random() - 0.5) * Math.min(3, gameState.score * 0.15);
+      let x = startX, y = startY;
+      const moveInterval = setInterval(() => {
+        if (!orb.isConnected) { clearInterval(moveInterval); return; }
+        x += vx; y += vy;
+        if (x < 0 || x > r.width - size) { /* bounce */ }
+        if (y < 0 || y > r.height - size) { /* bounce */ }
+        x = Math.max(0, Math.min(r.width - size, x));
+        y = Math.max(0, Math.min(r.height - size, y));
+        orb.style.left = x + 'px';
+        orb.style.top = y + 'px';
+      }, 30);
+    }
+    
+    const handleTap = e => {
+      e.stopPropagation();
+      if (e.preventDefault) e.preventDefault();
+      if (isBad) {
+        gameState.score = Math.max(0, gameState.score - 2);
+        // Visual penalty
+        area.style.filter = 'hue-rotate(180deg)';
+        setTimeout(() => area.style.filter = '', 200);
+      } else if (isBonus) {
+        gameState.score += 3;
+      } else {
+        gameState.score++;
+      }
+      $('gameScore').textContent = gameState.score;
+      orb.remove();
+    };
+    
+    orb.addEventListener('click', handleTap);
+    orb.addEventListener('touchstart', handleTap, { passive: false });
+    area.appendChild(orb);
+    const lifespan = Math.max(900, 2000 - gameState.score * 30);
+    setTimeout(() => orb.remove(), lifespan);
+  }
+  
+  if (!document.getElementById('orbAnim')) {
+    const st = document.createElement('style');
+    st.id = 'orbAnim';
+    st.textContent = `@keyframes orbFade { 0% { opacity: 0; transform: scale(0.3); } 20% { opacity: 1; transform: scale(1.1); } 80% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(0.8); } }`;
+    document.head.appendChild(st);
+  }
+  
+  // Spawn rate accelerates
+  function adaptiveSpawn() {
+    const interval = Math.max(250, 700 - gameState.score * 25);
+    clearInterval(spawnInterval);
+    spawnInterval = setInterval(() => {
+      spawn();
+      // Re-evaluate spawn rate
+      const newInterval = Math.max(250, 700 - gameState.score * 25);
+      if (Math.abs(newInterval - interval) > 50) adaptiveSpawn();
+    }, interval);
+  }
+  adaptiveSpawn();
+  
+  gameLoop = { interval: spawnInterval };
+  const origStop = stopGame;
+  stopGame = function() {
+    clearInterval(spawnInterval);
+    area.innerHTML = '';
+    origStop();
+    stopGame = origStop;
+  };
+  
+  startTimer(30, endGame);
+}
+
+// ===== TAROT =====
+function initTarot() {
+  const area = $('gameArea');
+  area.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'tarot-area';
+  area.appendChild(wrap);
+  
+  $('gameInfo').style.display = 'none'; // Hide time for tarot, use rounds
+  let rounds = 7;
+  let currentRound = 0;
+  
+  function nextRound() {
+    if (currentRound >= rounds) {
+      endGame();
+      return;
+    }
+    currentRound++;
+    wrap.innerHTML = `
+      <div class="tarot-prompt">Carta ${currentRound} de ${rounds} · puntos: ${gameState.score}</div>
+      <div class="tarot-result" id="tarotResult">¿Cuál esconde a "${TAROT_CARDS[Math.floor(Math.random()*TAROT_CARDS.length)].name}"?</div>
+      <div class="tarot-deck" id="tarotDeck"></div>
+    `;
+    // Pick target
+    const targetIdx = Math.floor(Math.random() * 3);
+    const targetCard = TAROT_CARDS[Math.floor(Math.random()*TAROT_CARDS.length)];
+    $('tarotResult').textContent = `Encuentra: ${targetCard.name}`;
+    
+    // 3 cards: 1 is target, 2 are others
+    const otherCards = TAROT_CARDS.filter(c => c.name !== targetCard.name);
+    const cardSet = [targetCard, otherCards[0], otherCards[1]].sort(() => Math.random() - 0.5);
+    const correctIdx = cardSet.findIndex(c => c.name === targetCard.name);
+    
+    const deck = $('tarotDeck');
+    cardSet.forEach((card, i) => {
+      const el = document.createElement('div');
+      el.className = 'tarot-card';
+      el.innerHTML = `<div class="back">⚜</div><div class="face">${card.icon}</div>`;
+      el.addEventListener('click', () => {
+        // Reveal all
+        deck.querySelectorAll('.tarot-card').forEach((c, j) => {
+          c.classList.add('revealed');
+        });
+        if (i === correctIdx) {
+          gameState.score += 10;
+          $('tarotResult').textContent = '✦ ¡Acertaste! ✦';
+        } else {
+          $('tarotResult').textContent = '✗ No era esa...';
+        }
+        setTimeout(nextRound, 1200);
+      }, { once: true });
+      deck.appendChild(el);
+    });
+  }
+  nextRound();
+}
+
+// ===== REFLEX =====
+function initReflex() {
+  const area = $('gameArea');
+  area.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'reflex-area';
+  area.appendChild(wrap);
+  
+  let roundTimer = null;
+  
+  function nextRound() {
+    if (gameState.time <= 0) return;
+    if (roundTimer) clearTimeout(roundTimer);
+    
+    const target = REFLEX_SYMBOLS[Math.floor(Math.random() * REFLEX_SYMBOLS.length)];
+    // More options as score grows (up to 9)
+    const optCount = Math.min(9, 6 + Math.floor(gameState.score / 5));
+    const opts = [target];
+    while (opts.length < optCount) {
+      const s = REFLEX_SYMBOLS[Math.floor(Math.random() * REFLEX_SYMBOLS.length)];
+      if (!opts.includes(s)) opts.push(s);
+    }
+    opts.sort(() => Math.random() - 0.5);
+    
+    // Time to react decreases
+    const reactMs = Math.max(800, 2500 - gameState.score * 80);
+    
+    wrap.innerHTML = `
+      <div class="reflex-prompt">Toca este símbolo · ${(reactMs/1000).toFixed(1)}s</div>
+      <div class="reflex-target">${target}</div>
+      <div class="reflex-options" id="reflexOpts" style="grid-template-columns: repeat(${Math.min(3, Math.ceil(Math.sqrt(optCount)))}, 1fr);"></div>
+    `;
+    const optsEl = $('reflexOpts');
+    let answered = false;
+    
+    opts.forEach(o => {
+      const div = document.createElement('div');
+      div.className = 'reflex-opt';
+      div.textContent = o;
+      div.addEventListener('click', () => {
+        if (answered) return;
+        answered = true;
+        if (o === target) {
+          div.classList.add('correct');
+          gameState.score++;
+          $('gameScore').textContent = gameState.score;
+        } else {
+          div.classList.add('wrong');
+          gameState.score = Math.max(0, gameState.score - 1);
+          $('gameScore').textContent = gameState.score;
+        }
+        setTimeout(nextRound, 250);
+      }, { once: true });
+      optsEl.appendChild(div);
+    });
+    
+    // Auto-fail if no answer in time
+    roundTimer = setTimeout(() => {
+      if (!answered) {
+        answered = true;
+        gameState.score = Math.max(0, gameState.score - 1);
+        $('gameScore').textContent = gameState.score;
+        nextRound();
+      }
+    }, reactMs);
+  }
+  
+  nextRound();
+  startTimer(35, endGame);
+}
+
+// ============ THOUGHT BUBBLE ============
+function showThought(emoji) {
+  const t = $('thought');
+  t.textContent = emoji;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1500);
+}
+
+// ============ RENDER ============
+let lastMoodCategory = null;
+
+function render() {
+  if (state.dead) {
+    $('endingText').textContent = `${state.name} ${state.deathReason}. Te acompañó durante ${Math.floor((Date.now() - state.born)/86400000)} días en este plano.`;
+    $('ending').classList.add('show');
+    return;
+  }
+
+  $('petName').textContent = state.name;
+  const stages = ['recién manifestado', 'espíritu joven', 'alma plena', 'espíritu ancestral'];
+  $('petStage').textContent = stages[state.stage];
+  $('evoStage').textContent = `forma ${state.stage + 1}/4`;
+  $('coinsVal').textContent = state.coins;
+
+  const ageDays = Math.floor((Date.now() - state.born) / 86400000);
+  $('ageDisplay').textContent = `edad: ${ageDays} ${ageDays === 1 ? 'día' : 'días'}`;
+
+  updateBar('hunger', state.hunger);
+  updateBar('thirst', state.thirst);
+  updateBar('happy', state.happy);
+  updateBar('energy', state.energy);
+
+  const hour = new Date().getHours();
+  const isNight = hour < 7 || hour >= 20;
+  sanctum.classList.toggle('night', isNight);
+  celestial.classList.toggle('sun', !isNight);
+  celestial.classList.toggle('moon', isNight);
+  $('timeDisplay').textContent = isNight ? 'noche' : 'día';
+
+  const hat = HATS.find(h => h.id === state.hat);
+  if (hat && hat.id !== 'none') {
+    $('hat').textContent = hat.icon;
+    $('hat').classList.add('show');
+  } else {
+    $('hat').classList.remove('show');
+  }
+  const aura = AURAS.find(a => a.id === state.aura);
+  const auraEl = $('aura');
+  auraEl.className = 'aura';
+  if (aura && aura.id !== 'none' && aura.color) {
+    auraEl.classList.add('active', aura.color);
+  }
+  
+  // Apply background
+  const bg = BACKGROUNDS.find(b => b.id === state.background) || BACKGROUNDS[0];
+  $('sanctum').style.background = bg.bg;
+  
+  // Apply furniture (decorative bottom-left)
+  const furn = FURNITURE.find(f => f.id === state.furniture);
+  if (furn && furn.id !== 'none') {
+    $('furniture').textContent = furn.emoji;
+    $('furniture').style.display = 'block';
+  } else {
+    $('furniture').style.display = 'none';
+  }
+  
+  // Apply decoration (top-left)
+  const deco = DECORATIONS.find(d => d.id === state.decoration);
+  if (deco && deco.id !== 'none') {
+    $('decoration').textContent = deco.emoji;
+    $('decoration').style.display = 'block';
+  } else {
+    $('decoration').style.display = 'none';
+  }
+  
+  // Blessed indicator
+  $('sanctum').classList.toggle('blessed', Date.now() < state.blessedUntil);
+  
+  // Render poops
+  renderPoops();
+  updateCleanBtn();
+
+  ghost.classList.remove('happy', 'sad', 'sleeping');
+  let mood = '';
+  let moodCategory = 'neutral';
+  if (state.sleeping) {
+    ghost.classList.add('sleeping');
+    mood = 'soñando entre velos...';
+    $('sleepIcon').textContent = '☀';
+    $('sleepLabel').textContent = 'Despertar';
+    moodCategory = 'sleeping';
+  } else {
+    $('sleepIcon').textContent = '☾';
+    $('sleepLabel').textContent = 'Dormir';
+    const avg = (state.hunger + state.thirst + state.happy + state.energy) / 4;
+    if (state.hunger < 25) { ghost.classList.add('sad'); mood = `${state.name} tiene hambre...`; moodCategory = 'sad'; }
+    else if (state.thirst < 25) { ghost.classList.add('sad'); mood = `${state.name} necesita esencia...`; moodCategory = 'sad'; }
+    else if (state.energy < 20) { mood = `${state.name} está agotado...`; moodCategory = 'tired'; }
+    else if (state.happy < 30) { ghost.classList.add('sad'); mood = `${state.name} se siente solo...`; moodCategory = 'sad'; }
+    else if (avg > 75) { ghost.classList.add('happy'); mood = `${state.name} flota feliz contigo`; moodCategory = 'happy'; }
+    else { mood = `${state.name} está tranquilo`; moodCategory = 'neutral'; }
+  }
+  $('moodText').textContent = mood;
+  
+  // Trigger transition emotions
+  if (lastMoodCategory && lastMoodCategory !== moodCategory) {
+    if (moodCategory === 'sad' && lastMoodCategory !== 'sad') {
+      // Just became sad - droop animation
+      $('ghostWrap').classList.add('emotion-sad');
+      setTimeout(() => $('ghostWrap').classList.remove('emotion-sad'), 1200);
+    } else if (moodCategory === 'happy' && lastMoodCategory === 'sad') {
+      // Recovered from sad - happy bounce
+      $('ghostWrap').classList.add('emotion-happy');
+      setTimeout(() => $('ghostWrap').classList.remove('emotion-happy'), 1800);
+    }
+  }
+  lastMoodCategory = moodCategory;
+
+  updateNotice();
+}
+
+function updateBar(stat, val) {
+  const bar = $(stat + 'Bar');
+  $(stat + 'Val').textContent = Math.round(val);
+  bar.style.width = val + '%';
+  bar.classList.remove('low', 'med');
+  if (val < 25) bar.classList.add('low');
+  else if (val < 55) bar.classList.add('med');
+}
+
+function updateNotice() {
+  const notice = $('notice');
+  const icon = $('noticeIcon');
+  const text = $('noticeText');
+  let msg = null, ic = '⚠';
+  if (state.poops && state.poops.length >= 2) { 
+    msg = `Hay ${state.poops.length} cacas en el sanctum! Límpialas`; 
+    ic = '💩'; 
+  }
+  else if (state.hunger < 20) { msg = `${state.name} necesita alimento espectral`; ic = '🌙'; }
+  else if (state.thirst < 20) { msg = `${state.name} necesita esencia`; ic = '💧'; }
+  else if (state.happy < 25) { msg = `${state.name} te echa de menos`; ic = '💜'; }
+  else if (state.energy < 15 && !state.sleeping) { msg = `${state.name} está exhausto, déjalo descansar`; ic = '☾'; }
+  if (msg) {
+    text.textContent = msg;
+    icon.textContent = ic;
+    notice.classList.add('show');
+    maybeNotify(msg);
+  } else {
+    notice.classList.remove('show');
+  }
+}
+
+// ============ NOTIFICATIONS ============
+function maybeNotify(msg) {
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+  const now = Date.now();
+  if (now - state.lastNotified < 30 * 60 * 1000) return;
+  state.lastNotified = now;
+  saveState();
+  try { new Notification('SpiritPet 👻', { body: msg }); } catch(e) {}
+}
+let permAsked = false;
+function askPermission() {
+  if (permAsked) return;
+  permAsked = true;
+  if ('Notification' in window && Notification.permission === 'default') {
+    setTimeout(() => Notification.requestPermission(), 2000);
+  }
+}
+document.addEventListener('click', askPermission, { once: true });
+
+// ============ AMBIENT ============
+function spawnOrbs() {
+  const c = $('orbs');
+  for (let i = 0; i < 18; i++) {
+    const o = document.createElement('div');
+    o.className = 'orb';
+    o.style.left = Math.random() * 100 + '%';
+    o.style.animationDuration = (15 + Math.random() * 20) + 's';
+    o.style.animationDelay = (Math.random() * 20) + 's';
+    o.style.opacity = 0.3 + Math.random() * 0.5;
+    c.appendChild(o);
+  }
+}
+function spawnStars() {
+  const c = $('stars');
+  for (let i = 0; i < 30; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.left = Math.random() * 100 + '%';
+    s.style.top = Math.random() * 60 + '%';
+    s.style.animationDelay = (Math.random() * 3) + 's';
+    c.appendChild(s);
+  }
+}
+
+// ============ MAIN LOOP ============
+setInterval(() => {
+  if (!state || !state.name || state.dead) return;
+  catchUpTime();
+  render();
+}, 15000);
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && state && state.name && !state.dead) {
+    catchUpTime();
+    render();
+  }
+});
+
+// ============ PWA INSTALL ============
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show custom install banner after 30 seconds of play
+  setTimeout(showInstallBanner, 30000);
+});
+
+function showInstallBanner() {
+  if (document.getElementById('installBanner')) return;
+  if (!deferredPrompt && !isIOS()) return;
+  
+  const banner = document.createElement('div');
+  banner.id = 'installBanner';
+  banner.style.cssText = `
+    position: fixed; bottom: 16px; left: 16px; right: 16px;
+    background: linear-gradient(135deg, rgba(122, 77, 255, 0.95), rgba(40, 20, 60, 0.95));
+    border: 1px solid var(--accent-gold);
+    border-radius: 14px;
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 12px;
+    z-index: 500;
+    box-shadow: 0 8px 32px rgba(122, 77, 255, 0.4);
+    backdrop-filter: blur(10px);
+    max-width: 450px;
+    margin: 0 auto;
+    animation: slideUp 0.4s ease-out;
+  `;
+  
+  if (isIOS()) {
+    banner.innerHTML = `
+      <div style="font-size: 24px;">📱</div>
+      <div style="flex: 1; color: white; font-size: 13px; line-height: 1.4;">
+        <strong style="font-family: 'Cinzel', serif; letter-spacing: 0.1em;">Instalar SpiritPet</strong><br>
+        <span style="opacity: 0.9; font-style: italic;">Pulsa <strong>Compartir</strong> ⎙ y luego <strong>"Añadir a Inicio"</strong></span>
+      </div>
+      <button id="closeInstall" style="background: none; border: 1px solid rgba(255,255,255,0.3); color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 14px; padding: 0;">✕</button>
+    `;
+  } else {
+    banner.innerHTML = `
+      <div style="font-size: 24px;">⬇</div>
+      <div style="flex: 1; color: white; font-size: 13px;">
+        <strong style="font-family: 'Cinzel', serif; letter-spacing: 0.1em;">Instalar SpiritPet</strong><br>
+        <span style="opacity: 0.9; font-style: italic;">Tener acceso rápido desde tu pantalla</span>
+      </div>
+      <button id="installBtn" style="background: var(--accent-gold); border: none; color: #1a0830; padding: 8px 14px; border-radius: 8px; font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; font-weight: 700;">Instalar</button>
+      <button id="closeInstall" style="background: none; border: 1px solid rgba(255,255,255,0.3); color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 14px; padding: 0;">✕</button>
+    `;
+  }
+  
+  document.body.appendChild(banner);
+  
+  document.getElementById('closeInstall').onclick = () => {
+    banner.remove();
+    localStorage.setItem('installBannerDismissed', Date.now());
+  };
+  
+  const installBtn = document.getElementById('installBtn');
+  if (installBtn && deferredPrompt) {
+    installBtn.onclick = async () => {
+      banner.remove();
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+    };
+  }
+  
+  // Add slideUp animation
+  if (!document.getElementById('slideUpAnim')) {
+    const s = document.createElement('style');
+    s.id = 'slideUpAnim';
+    s.textContent = '@keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }';
+    document.head.appendChild(s);
+  }
+}
+
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+
+function isStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches || 
+         window.navigator.standalone === true;
+}
+
+// Show iOS banner after delay if not already installed
+if (isIOS() && !isStandalone()) {
+  const dismissed = localStorage.getItem('installBannerDismissed');
+  // Don't show if dismissed within last 3 days
+  if (!dismissed || Date.now() - parseInt(dismissed) > 3 * 24 * 60 * 60 * 1000) {
+    setTimeout(showInstallBanner, 45000); // 45 sec after open
+  }
+}
+
+// ============ EXPORT/IMPORT PROGRESS ============
+// (For when we add login later, users can export their progress)
+window.spiritpetExport = function() {
+  const data = localStorage.getItem(STORAGE_KEY);
+  if (!data) return null;
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `spiritpet-${state.name || 'progress'}-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  return data;
+};
+
+window.spiritpetImport = function(jsonString) {
+  try {
+    const data = JSON.parse(jsonString);
+    if (!data.name) throw new Error('Invalid save');
+    localStorage.setItem(STORAGE_KEY, jsonString);
+    location.reload();
+  } catch(e) {
+    alert('Archivo de progreso inválido');
+  }
+};
+
+init();
+</script>
+</body>
+</html>

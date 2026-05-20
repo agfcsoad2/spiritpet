@@ -1,0 +1,52 @@
+{
+  "name": "SpiritPet · Tu compañero del más allá",
+  "short_name": "SpiritPet",
+  "description": "Adopta un espíritu del más allá. Cuídalo, juega mini-juegos paranormales y decora su sanctum. Un tamagochi para quienes quieren compañía sin compromiso real.",
+  "start_url": "./",
+  "scope": "./",
+  "id": "/spiritpet/",
+  "display": "standalone",
+  "display_override": ["standalone", "fullscreen"],
+  "orientation": "portrait-primary",
+  "background_color": "#0a0612",
+  "theme_color": "#7a4dff",
+  "lang": "es",
+  "dir": "ltr",
+  "categories": ["games", "lifestyle", "entertainment"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-1.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Tu fantasma flotando en el sanctum"
+    }
+  ],
+  "prefer_related_applications": false
+}
