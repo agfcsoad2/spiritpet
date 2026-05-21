@@ -1,5 +1,5 @@
-// SpiritPet Service Worker v8 — network-first para HTML, cache-first para assets
-const CACHE = 'spiritpet-v8';
+// SpiritPet Service Worker v9 — network-first para HTML, cache-first para assets
+const CACHE = 'spiritpet-v9';
 const PRECACHE = [
   './',
   './index.html',

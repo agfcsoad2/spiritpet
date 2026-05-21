@@ -1324,6 +1324,84 @@
   .reflex-opt.correct { background: rgba(77, 255, 170, 0.3); border-color: var(--accent-green); }
   .reflex-opt.wrong { background: rgba(255, 77, 122, 0.3); border-color: var(--accent-red); }
 
+  /* Seance (Simón) */
+  .seance-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 20px; padding: 16px; }
+  .seance-prompt {
+    font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 0.15em;
+    color: var(--text-faded); text-transform: uppercase; text-align: center; min-height: 16px;
+  }
+  .seance-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; width: 100%; max-width: 260px; }
+  .seance-candle {
+    aspect-ratio: 1; border-radius: 16px; display: flex; align-items: center; justify-content: center;
+    font-size: 40px; cursor: pointer; background: rgba(20, 9, 31, 0.8);
+    border: 2px solid var(--cc); opacity: 0.4; transition: opacity 0.12s ease, transform 0.12s ease;
+    filter: grayscale(0.6);
+  }
+  .seance-candle.lit { opacity: 1; filter: grayscale(0); transform: scale(1.08); box-shadow: 0 0 30px var(--cc), inset 0 0 20px var(--cc); }
+  .seance-candle:active { transform: scale(0.95); }
+
+  /* Exorcism (whack-a-mole) */
+  .exorcism-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    width: 100%; height: 100%; padding: 14px;
+  }
+  .exo-hole {
+    background: radial-gradient(ellipse at center bottom, rgba(60, 40, 80, 0.6), rgba(10, 6, 18, 0.9));
+    border: 1px solid rgba(122, 77, 255, 0.25); border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  .exo-fig {
+    font-size: 38px; cursor: pointer; transform: translateY(120%); opacity: 0;
+    transition: transform 0.18s cubic-bezier(0.34,1.4,0.64,1), opacity 0.12s ease;
+    user-select: none;
+  }
+  .exo-hole.active .exo-fig { transform: translateY(0); opacity: 1; }
+  .exo-fig:active { transform: scale(0.85); }
+
+  /* Pendulum (timing) */
+  .pendulum-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 26px; padding: 20px; }
+  .pend-instr {
+    font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.15em;
+    color: var(--text-faded); text-transform: uppercase; text-align: center;
+  }
+  .pend-track {
+    position: relative; width: 100%; max-width: 300px; height: 46px;
+    background: linear-gradient(90deg, rgba(122,77,255,0.12), rgba(122,77,255,0.04));
+    border: 1px solid rgba(122, 77, 255, 0.4); border-radius: 24px; cursor: pointer;
+  }
+  .pend-zone {
+    position: absolute; top: 0; bottom: 0; background: rgba(77, 255, 170, 0.28);
+    border-left: 2px solid var(--accent-green); border-right: 2px solid var(--accent-green);
+    transition: background 0.15s ease;
+  }
+  .pend-zone.hit { background: rgba(77, 255, 170, 0.6); }
+  .pend-marker {
+    position: absolute; top: 50%; width: 22px; height: 22px; margin-left: -11px;
+    transform: translateY(-50%); background: radial-gradient(circle, #fff, var(--accent-purple));
+    border-radius: 50%; box-shadow: 0 0 18px var(--accent-purple);
+  }
+  .pend-btn {
+    background: linear-gradient(135deg, var(--accent-purple), #a855f7); color: #fff; border: none;
+    padding: 14px 40px; border-radius: 30px; font-family: 'Cinzel', serif; font-size: 14px;
+    font-weight: 700; letter-spacing: 0.15em; cursor: pointer; box-shadow: 0 0 22px rgba(122,77,255,0.4);
+  }
+  .pend-btn:active { transform: scale(0.95); }
+
+  /* Spot the difference */
+  .spot-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 16px; padding: 14px; }
+  .spot-instr {
+    font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.15em;
+    color: var(--text-faded); text-transform: uppercase; text-align: center;
+  }
+  .spot-grid { display: grid; gap: 8px; width: 100%; max-width: 320px; }
+  .spot-cell {
+    aspect-ratio: 1; background: rgba(122, 77, 255, 0.1);
+    border: 1px solid rgba(122, 77, 255, 0.25); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; cursor: pointer; transition: transform 0.1s ease;
+  }
+  .spot-cell:active { transform: scale(0.9); }
+
   /* Game over */
   .game-end {
     display: none;
@@ -1777,11 +1855,14 @@
 <script>
 // ============ DATA ============
 const FOODS = [
-  { id: 'soul', name: 'Almas en pena', icon: '🕯', desc: 'Alimento básico para todo espíritu', hunger: 25, thirst: 0, happy: 0, cost: 0, unlock: 0 },
-  { id: 'moon', name: 'Esencia de luna', icon: '🌙', desc: 'Hidrata profundamente con luz lunar', hunger: 5, thirst: 40, happy: 5, cost: 0, unlock: 0 },
-  { id: 'ecto', name: 'Ectoplasma', icon: '🟢', desc: 'Sube el ánimo además de alimentar', hunger: 20, thirst: 10, happy: 25, cost: 0, unlock: 0 },
-  { id: 'incense', name: 'Nube de incienso', icon: '🌫', desc: 'Recupera todas las energías un poco', hunger: 15, thirst: 15, happy: 15, energy: 15, cost: 0, unlock: 0 },
-  { id: 'relic', name: 'Reliquia rara', icon: '⚱', desc: 'Restaura todas las energías al máximo. Se desbloquea con edad.', hunger: 100, thirst: 100, happy: 100, energy: 100, cost: 0, unlock: 3 }
+  { id: 'soul', name: 'Almas en pena', icon: '🕯', desc: 'Alimento básico gratuito. Sacia poco el hambre', hunger: 14, thirst: 0, happy: 0, cost: 0, unlock: 0 },
+  { id: 'moon', name: 'Esencia de luna', icon: '🌙', desc: 'Hidratación lunar básica y gratuita', hunger: 3, thirst: 20, happy: 3, cost: 0, unlock: 0 },
+  { id: 'ecto', name: 'Ectoplasma', icon: '🟢', desc: 'Alimenta y anima. Comida de pago', hunger: 20, thirst: 12, happy: 20, cost: 9, unlock: 0 },
+  { id: 'incense', name: 'Nube de incienso', icon: '🌫', desc: 'Recupera todas las energías un poco', hunger: 16, thirst: 16, happy: 16, energy: 18, cost: 15, unlock: 0 },
+  { id: 'feast', name: 'Banquete espectral', icon: '🍖', desc: 'Sacia el hambre por completo y anima', hunger: 70, thirst: 12, happy: 28, cost: 26, unlock: 1 },
+  { id: 'nectar', name: 'Néctar del velo', icon: '🍶', desc: 'Hidrata y revitaliza profundamente', hunger: 12, thirst: 70, happy: 16, energy: 42, cost: 30, unlock: 1 },
+  { id: 'heart', name: 'Corazón de espíritu', icon: '💖', desc: 'Colma el ánimo del espíritu', hunger: 18, thirst: 18, happy: 80, cost: 36, unlock: 2 },
+  { id: 'relic', name: 'Reliquia rara', icon: '⚱', desc: 'Restaura TODAS las energías al máximo', hunger: 100, thirst: 100, happy: 100, energy: 100, cost: 65, unlock: 3 }
 ];
 
 const GAMES = [
@@ -1789,7 +1870,11 @@ const GAMES = [
   { id: 'memory', name: 'Memoria', icon: '🔮', desc: 'Encuentra parejas de símbolos paranormales' },
   { id: 'orbs', name: 'Caza-orbes', icon: '✨', desc: 'Toca los orbes antes de que se desvanezcan' },
   { id: 'tarot', name: 'Tarot', icon: '🎴', desc: 'Adivina qué carta es la afortunada' },
-  { id: 'reflex', name: 'Reflejos', icon: '⚡', desc: 'Toca el símbolo correcto lo más rápido posible' }
+  { id: 'reflex', name: 'Reflejos', icon: '⚡', desc: 'Toca el símbolo correcto lo más rápido posible' },
+  { id: 'seance', name: 'Sesión espiritista', icon: '🕯', desc: 'Memoriza y repite la secuencia de velas' },
+  { id: 'exorcism', name: 'Exorcismo', icon: '✝', desc: 'Toca fantasmas, evita los demonios' },
+  { id: 'pendulum', name: 'Péndulo del médium', icon: '⚖', desc: 'Fija el orbe justo en la zona sagrada' },
+  { id: 'spot', name: 'Ojo del vidente', icon: '👁', desc: 'Encuentra el símbolo diferente' }
 ];
 
 const HATS = [
@@ -2352,7 +2437,7 @@ const SP_Audio = (function () {
 })();
 
 // ============ BUG REPORTER ============
-const APP_VERSION = 'v7';
+const APP_VERSION = 'v9';
 
 function openReportModal() {
   closeAccountModal();
@@ -2556,10 +2641,10 @@ function catchUpTime() {
   const elapsedMs = now - state.lastUpdate;
   const minutes = elapsedMs / 60000;
 
-  const hungerDecay = state.sleeping ? 0.15 : 0.4;
-  const thirstDecay = state.sleeping ? 0.2 : 0.5;
-  const happyDecay = 0.3;
-  const energyDecay = state.sleeping ? -1.2 : 0.25;
+  const hungerDecay = state.sleeping ? 0.28 : 0.72;
+  const thirstDecay = state.sleeping ? 0.34 : 0.86;
+  const happyDecay = state.sleeping ? 0.22 : 0.52;
+  const energyDecay = state.sleeping ? -1.1 : 0.4;
 
   state.hunger = Math.max(0, state.hunger - hungerDecay * minutes);
   state.thirst = Math.max(0, state.thirst - thirstDecay * minutes);
@@ -2677,18 +2762,22 @@ function renderFoodList() {
   const ageDays = (Date.now() - state.born) / 86400000;
   FOODS.forEach(food => {
     const locked = ageDays < food.unlock;
+    const tooPoor = !locked && food.cost > 0 && state.coins < food.cost;
     const div = document.createElement('div');
-    div.className = 'item' + (locked ? ' locked' : '');
-    const energyText = food.energy ? ` · Energía +${food.energy}` : '';
+    div.className = 'item' + (locked || tooPoor ? ' locked' : '');
+    let descExtra = '';
+    if (locked) descExtra = ' · 🔒 ' + food.unlock + 'd';
+    else if (tooPoor) descExtra = ' · ✦ insuficientes';
+    const btnLabel = food.cost > 0 ? `Ofrecer ✦${food.cost}` : 'Ofrecer';
     div.innerHTML = `
       <div class="item-icon">${food.icon}</div>
       <div class="item-info">
         <div class="item-name">${food.name}</div>
-        <div class="item-desc">${food.desc}${locked ? ' · 🔒 ' + food.unlock + 'd' : ''}</div>
+        <div class="item-desc">${food.desc}${descExtra}</div>
       </div>
-      <button class="item-action" ${locked ? 'disabled' : ''}>Ofrecer</button>
+      <button class="item-action${food.cost > 0 ? ' gold' : ''}" ${locked || tooPoor ? 'disabled' : ''}>${btnLabel}</button>
     `;
-    if (!locked) {
+    if (!locked && !tooPoor) {
       div.querySelector('button').addEventListener('click', e => {
         e.stopPropagation();
         feedPet(food);
@@ -2698,6 +2787,11 @@ function renderFoodList() {
   });
 }
 function feedPet(food) {
+  if (food.cost > 0) {
+    if (state.coins < food.cost) return;
+    state.coins -= food.cost;
+    SP_Audio.play('buy');
+  }
   catchUpTime();
   $('foodModal').classList.remove('show');
   
@@ -3262,6 +3356,10 @@ function startGame(id) {
   else if (id === 'orbs') initOrbs();
   else if (id === 'tarot') initTarot();
   else if (id === 'reflex') initReflex();
+  else if (id === 'seance') initSeance();
+  else if (id === 'exorcism') initExorcism();
+  else if (id === 'pendulum') initPendulum();
+  else if (id === 'spot') initSpot();
 }
 
 function endGame() {
@@ -3735,6 +3833,284 @@ function initReflex() {
     }, reactMs);
   }
   
+  nextRound();
+  startTimer(35, endGame);
+}
+
+// ===== SÉANCE (Simón dice) =====
+function initSeance() {
+  const area = $('gameArea');
+  area.innerHTML = '';
+  $('gameInfo').style.display = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'seance-area';
+  const prompt = document.createElement('div');
+  prompt.className = 'seance-prompt';
+  prompt.textContent = 'Observa la secuencia...';
+  const grid = document.createElement('div');
+  grid.className = 'seance-grid';
+  const colors = ['#7a4dff', '#4dfff0', '#ff4d7a', '#d4b87a'];
+  const tones = [392, 523, 659, 784];
+  const candleEls = [];
+  colors.forEach((c, i) => {
+    const el = document.createElement('div');
+    el.className = 'seance-candle';
+    el.style.setProperty('--cc', c);
+    el.textContent = '🕯';
+    grid.appendChild(el);
+    candleEls.push(el);
+  });
+  wrap.appendChild(prompt);
+  wrap.appendChild(grid);
+  area.appendChild(wrap);
+
+  let sequence = [], playerIdx = 0, accepting = false, alive = true;
+  const origStop = stopGame;
+  stopGame = function () { alive = false; origStop(); stopGame = origStop; };
+
+  function flash(i, dur) {
+    return new Promise(res => {
+      if (!alive) return res();
+      candleEls[i].classList.add('lit');
+      SP_Audio.play('pet');
+      setTimeout(() => {
+        candleEls[i].classList.remove('lit');
+        setTimeout(res, 160);
+      }, dur);
+    });
+  }
+  async function playSequence() {
+    accepting = false;
+    prompt.textContent = 'Observa la secuencia...';
+    const speed = Math.max(260, 620 - sequence.length * 28);
+    for (const i of sequence) {
+      if (!alive) return;
+      await flash(i, speed);
+    }
+    if (!alive) return;
+    prompt.textContent = 'Tu turno · repite';
+    accepting = true;
+    playerIdx = 0;
+  }
+  function nextRound() {
+    if (!alive) return;
+    sequence.push(Math.floor(Math.random() * 4));
+    $('gameTime').textContent = 'R' + sequence.length;
+    playSequence();
+  }
+  candleEls.forEach((el, i) => {
+    const tap = e => {
+      e.preventDefault();
+      if (!accepting) return;
+      el.classList.add('lit');
+      setTimeout(() => el.classList.remove('lit'), 170);
+      if (sequence[playerIdx] === i) {
+        playerIdx++;
+        SP_Audio.play('tap');
+        if (playerIdx === sequence.length) {
+          gameState.score += sequence.length;
+          $('gameScore').textContent = gameState.score;
+          accepting = false;
+          prompt.textContent = '✦ ¡Correcto! ✦';
+          setTimeout(nextRound, 750);
+        }
+      } else {
+        accepting = false;
+        prompt.textContent = '✗ Secuencia rota';
+        SP_Audio.play('lose');
+        setTimeout(endGame, 500);
+      }
+    };
+    el.addEventListener('click', tap);
+    el.addEventListener('touchstart', tap, { passive: false });
+  });
+  setTimeout(nextRound, 800);
+}
+
+// ===== EXORCISMO (whack-a-mole) =====
+function initExorcism() {
+  const area = $('gameArea');
+  area.innerHTML = '';
+  $('gameInfo').style.display = '';
+  const grid = document.createElement('div');
+  grid.className = 'exorcism-grid';
+  const holes = [];
+  for (let i = 0; i < 9; i++) {
+    const hole = document.createElement('div');
+    hole.className = 'exo-hole';
+    const fig = document.createElement('div');
+    fig.className = 'exo-fig';
+    hole.appendChild(fig);
+    grid.appendChild(hole);
+    holes.push({ hole, fig, busy: false, timeout: null, tap: null });
+  }
+  area.appendChild(grid);
+
+  let spawnTimer = null;
+  function clearDown(h) {
+    h.busy = false;
+    h.hole.classList.remove('active');
+    if (h.timeout) { clearTimeout(h.timeout); h.timeout = null; }
+    if (h.tap) {
+      h.fig.removeEventListener('click', h.tap);
+      h.fig.removeEventListener('touchstart', h.tap);
+      h.tap = null;
+    }
+    h.fig.textContent = '';
+  }
+  function popUp() {
+    const free = holes.filter(h => !h.busy);
+    if (!free.length) return;
+    const h = free[Math.floor(Math.random() * free.length)];
+    const isDemon = Math.random() < Math.min(0.5, 0.22 + gameState.score * 0.014);
+    h.busy = true;
+    h.fig.textContent = isDemon ? '👿' : '👻';
+    h.fig.dataset.demon = isDemon ? '1' : '0';
+    h.hole.classList.add('active');
+    const life = Math.max(620, 1450 - gameState.score * 26);
+    h.tap = e => {
+      e.preventDefault();
+      if (!h.busy) return;
+      if (h.fig.dataset.demon === '1') {
+        gameState.score = Math.max(0, gameState.score - 2);
+        SP_Audio.play('alert');
+        area.style.filter = 'hue-rotate(160deg)';
+        setTimeout(() => { area.style.filter = ''; }, 170);
+      } else {
+        gameState.score++;
+        SP_Audio.play('coin');
+      }
+      $('gameScore').textContent = gameState.score;
+      clearDown(h);
+    };
+    h.fig.addEventListener('click', h.tap);
+    h.fig.addEventListener('touchstart', h.tap, { passive: false });
+    h.timeout = setTimeout(() => clearDown(h), life);
+  }
+  spawnTimer = setInterval(() => {
+    const extra = Math.random() < Math.min(0.55, gameState.score * 0.03) ? 1 : 0;
+    for (let i = 0; i < 1 + extra; i++) popUp();
+  }, 760);
+
+  const origStop = stopGame;
+  stopGame = function () {
+    if (spawnTimer) { clearInterval(spawnTimer); spawnTimer = null; }
+    holes.forEach(clearDown);
+    origStop();
+    stopGame = origStop;
+  };
+  startTimer(30, endGame);
+}
+
+// ===== PÉNDULO (timing) =====
+function initPendulum() {
+  const area = $('gameArea');
+  area.innerHTML = '';
+  $('gameInfo').style.display = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'pendulum-area';
+  wrap.innerHTML = `
+    <div class="pend-instr">Fija el orbe dentro de la zona sagrada</div>
+    <div class="pend-track" id="pendTrack">
+      <div class="pend-zone" id="pendZone"></div>
+      <div class="pend-marker" id="pendMarker"></div>
+    </div>
+    <button class="pend-btn" id="pendBtn">✦ Fijar ✦</button>
+  `;
+  area.appendChild(wrap);
+
+  let lives = 3, pos = 0, dir = 1, speed = 0.013, zoneStart = 0.4, zoneW = 0.2, ended = false;
+  $('gameTime').textContent = '❤❤❤';
+  const marker = $('pendMarker'), zone = $('pendZone'), track = $('pendTrack');
+
+  function placeZone() {
+    zoneW = Math.max(0.07, 0.24 - gameState.score * 0.009);
+    zoneStart = 0.08 + Math.random() * (0.84 - zoneW);
+    zone.style.left = (zoneStart * 100) + '%';
+    zone.style.width = (zoneW * 100) + '%';
+  }
+  placeZone();
+
+  function loop() {
+    if (ended) return;
+    pos += dir * speed;
+    if (pos >= 1) { pos = 1; dir = -1; }
+    if (pos <= 0) { pos = 0; dir = 1; }
+    marker.style.left = (pos * 100) + '%';
+    gameLoop = requestAnimationFrame(loop);
+  }
+  loop();
+
+  function attempt() {
+    if (ended) return;
+    if (pos >= zoneStart && pos <= zoneStart + zoneW) {
+      gameState.score++;
+      $('gameScore').textContent = gameState.score;
+      SP_Audio.play('coin');
+      speed = Math.min(0.047, speed + 0.0024);
+      zone.classList.add('hit');
+      setTimeout(() => zone.classList.remove('hit'), 200);
+      placeZone();
+    } else {
+      lives--;
+      $('gameTime').textContent = '❤'.repeat(Math.max(0, lives));
+      SP_Audio.play('alert');
+      if (lives <= 0) {
+        ended = true;
+        setTimeout(endGame, 350);
+      }
+    }
+  }
+  $('pendBtn').addEventListener('click', e => { e.preventDefault(); attempt(); });
+  track.addEventListener('click', e => { e.preventDefault(); attempt(); });
+}
+
+// ===== OJO DEL VIDENTE (spot the difference) =====
+function initSpot() {
+  const area = $('gameArea');
+  area.innerHTML = '';
+  $('gameInfo').style.display = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'spot-area';
+  area.appendChild(wrap);
+  const symbols = ['☾', '★', '✦', '☀', '⚱', '☥', '⚜', '♆', '👻', '🔮', '🕯', '⭐'];
+
+  function nextRound() {
+    if (gameState.time <= 0) return;
+    const dim = Math.min(5, 3 + Math.floor(gameState.score / 6));
+    const total = dim * dim;
+    const sym = symbols[Math.floor(Math.random() * symbols.length)];
+    const oddIdx = Math.floor(Math.random() * total);
+    const subtlety = Math.max(0.13, 0.5 - gameState.score * 0.022);
+    wrap.innerHTML = '<div class="spot-instr">Encuentra el símbolo diferente</div>';
+    const grid = document.createElement('div');
+    grid.className = 'spot-grid';
+    grid.style.gridTemplateColumns = `repeat(${dim}, 1fr)`;
+    for (let i = 0; i < total; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'spot-cell';
+      cell.textContent = sym;
+      if (i === oddIdx) {
+        cell.style.opacity = String(1 - subtlety);
+        cell.style.transform = 'rotate(' + (subtlety * 45) + 'deg)';
+      }
+      cell.addEventListener('click', () => {
+        if (i === oddIdx) {
+          gameState.score++;
+          $('gameScore').textContent = gameState.score;
+          SP_Audio.play('coin');
+          nextRound();
+        } else {
+          gameState.score = Math.max(0, gameState.score - 1);
+          $('gameScore').textContent = gameState.score;
+          SP_Audio.play('alert');
+          cell.style.opacity = '0.25';
+        }
+      });
+      grid.appendChild(cell);
+    }
+    wrap.appendChild(grid);
+  }
   nextRound();
   startTimer(35, endGame);
 }
