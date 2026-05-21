@@ -259,6 +259,37 @@
   }
   .account-info strong { color: var(--accent-purple); display: block; margin-bottom: 4px; font-family: 'Cinzel', serif; letter-spacing: 0.1em; font-size: 12px; text-transform: uppercase; }
   .account-info small { display: block; margin-top: 6px; color: var(--text-faded); font-style: italic; }
+  .sound-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: rgba(122, 77, 255, 0.06);
+    border: 1px solid rgba(122, 77, 255, 0.2);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    color: var(--ghost);
+  }
+  .sound-toggle {
+    background: linear-gradient(135deg, var(--accent-green), #2ecc8f);
+    color: #06140d;
+    border: none;
+    border-radius: 16px;
+    padding: 6px 18px;
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    min-width: 62px;
+    transition: background 0.2s ease;
+  }
+  .sound-toggle.off {
+    background: linear-gradient(135deg, rgba(107,91,138,0.5), rgba(20,9,31,0.6));
+    color: var(--text-faded);
+  }
 
   /* ===== IDENTITY ===== */
   .identity { text-align: center; margin-bottom: 8px; }
@@ -1503,6 +1534,7 @@
         <span class="coins-icon">✦</span>
         <span id="coinsVal">0</span>
       </div>
+      <button class="account-btn" id="soundBtn" title="Sonido" aria-label="Sonido">🔊</button>
       <button class="account-btn" id="accountBtn" title="Cuenta y sincronización" aria-label="Cuenta">☁</button>
     </div>
   </header>
@@ -1607,7 +1639,36 @@
       Iniciar sesión con Google
     </button>
     <button class="modal-btn" id="logoutBtn" style="display:none">Cerrar sesión</button>
+    <button class="modal-btn" id="openReportBtn" style="background:linear-gradient(135deg, rgba(212,184,122,0.18), rgba(20,9,31,0.5));border:1px solid rgba(212,184,122,0.4);color:var(--accent-gold);">⚠ Reportar problema</button>
     <button class="modal-btn" id="accountCloseBtn" style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:var(--text-faded);">Cerrar</button>
+  </div>
+</div>
+
+<!-- Report modal -->
+<div class="modal" id="reportModal">
+  <div class="modal-panel modal-content">
+    <div class="modal-title">Reportar incidencia</div>
+    <div class="modal-desc">¿Algo no funciona o se te ocurre una mejora? Cuéntamelo.</div>
+    <textarea class="modal-input" id="reportText" placeholder="Describe el problema o sugerencia..." rows="5" maxlength="1500" style="min-height:110px;resize:vertical;font-family:'Cormorant Garamond',serif;font-size:15px;line-height:1.4;"></textarea>
+    <input class="modal-input" id="reportEmail" placeholder="Email para responderte (opcional)" type="email" maxlength="120" style="margin-top:8px;">
+    <button class="modal-btn" id="sendReportBtn">Enviar</button>
+    <button class="modal-btn" id="cancelReportBtn" style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:var(--text-faded);">Cancelar</button>
+  </div>
+</div>
+
+<!-- Sound modal -->
+<div class="modal" id="soundModal">
+  <div class="modal-panel modal-content">
+    <div class="modal-title">Sonido</div>
+    <div class="sound-row">
+      <span>Música de fondo</span>
+      <button class="sound-toggle" id="musicToggle">ON</button>
+    </div>
+    <div class="sound-row">
+      <span>Efectos de sonido</span>
+      <button class="sound-toggle" id="sfxToggle">ON</button>
+    </div>
+    <button class="modal-btn" id="soundCloseBtn" style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:var(--text-faded);">Cerrar</button>
   </div>
 </div>
 
@@ -2094,6 +2155,301 @@ function startLoginNag() {
   }, NAG_FIRST_DELAY_MS);
 }
 
+// ============ AUDIO ENGINE (procedural, Web Audio API) ============
+const SP_Audio = (function () {
+  let ctx = null, masterGain = null, musicGain = null, sfxGain = null;
+  let musicPlaying = false, musicTimer = null, padNodes = [];
+  let prefs = { music: true, sfx: true };
+
+  try {
+    const raw = localStorage.getItem('spiritpet_audio_prefs');
+    if (raw) prefs = { ...prefs, ...JSON.parse(raw) };
+  } catch (e) {}
+
+  function savePrefs() {
+    try { localStorage.setItem('spiritpet_audio_prefs', JSON.stringify(prefs)); } catch (e) {}
+  }
+
+  function ensureCtx() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    masterGain = ctx.createGain();
+    masterGain.gain.value = 0.55;
+    masterGain.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = prefs.music ? 0.3 : 0;
+    musicGain.connect(masterGain);
+    sfxGain = ctx.createGain();
+    sfxGain.gain.value = prefs.sfx ? 1 : 0;
+    sfxGain.connect(masterGain);
+    return ctx;
+  }
+
+  function resume() {
+    ensureCtx();
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+  }
+
+  function tone(freq, dur, type, when, gainMul) {
+    if (!ctx) return;
+    const t = when || ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime((gainMul || 1) * 0.45, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(g); g.connect(sfxGain);
+    osc.start(t);
+    osc.stop(t + dur + 0.05);
+  }
+
+  function arp(freqs, step, type, dur, gainMul) {
+    if (!ctx) return;
+    const base = ctx.currentTime;
+    freqs.forEach((f, i) => tone(f, dur || 0.18, type || 'triangle', base + i * (step || 0.07), gainMul));
+  }
+
+  function noiseSweep(dur, gainMul) {
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    const bufSize = ctx.sampleRate * dur;
+    const buffer = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufSize);
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    const filt = ctx.createBiquadFilter();
+    filt.type = 'bandpass';
+    filt.frequency.setValueAtTime(800, t);
+    filt.frequency.linearRampToValueAtTime(3500, t + dur);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime((gainMul || 1) * 0.3, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(filt); filt.connect(g); g.connect(sfxGain);
+    src.start(t);
+  }
+
+  const SFX = {
+    tap:    () => arp([523, 784], 0.05, 'sine', 0.14),
+    pet:    () => arp([659, 988], 0.06, 'sine', 0.18),
+    eat:    () => arp([330, 392, 494], 0.06, 'triangle', 0.12),
+    drink:  () => arp([440, 587, 698], 0.07, 'sine', 0.15),
+    coin:   () => arp([784, 1047, 1319], 0.055, 'square', 0.12, 0.7),
+    play:   () => arp([523, 659, 784, 1047], 0.06, 'triangle', 0.14),
+    sleep:  () => arp([392, 294, 220], 0.13, 'sine', 0.45),
+    wake:   () => arp([294, 392, 523], 0.09, 'triangle', 0.22),
+    clean:  () => noiseSweep(0.5, 1),
+    buy:    () => arp([659, 880, 1109], 0.06, 'square', 0.14, 0.7),
+    happy:  () => arp([523, 659, 784, 1047, 1319], 0.07, 'triangle', 0.2),
+    evolve: () => arp([392, 523, 659, 784, 1047, 1319, 1568], 0.1, 'triangle', 0.55),
+    sad:    () => arp([392, 330, 262], 0.15, 'sine', 0.42),
+    alert:  () => arp([466, 440], 0.17, 'sawtooth', 0.26, 0.6),
+    button: () => tone(660, 0.07, 'sine', 0, 0.7),
+    win:    () => arp([523, 659, 784, 1047, 1319, 1568], 0.08, 'triangle', 0.32),
+    lose:   () => arp([392, 330, 277, 220], 0.14, 'sine', 0.42),
+    love:   () => arp([659, 784, 988, 1319], 0.09, 'sine', 0.3),
+    surprise: () => arp([784, 1175], 0.04, 'triangle', 0.12)
+  };
+
+  function play(name) {
+    if (!prefs.sfx) return;
+    resume();
+    if (!ctx) return;
+    const fn = SFX[name];
+    if (fn) { try { fn(); } catch (e) {} }
+  }
+
+  // ---- Música de fondo: pad ambient + campanas pentatónicas ----
+  const PENTA = [220, 261.63, 293.66, 349.23, 392, 440, 523.25, 587.33];
+  const PAD_CHORD = [110, 164.81, 220, 329.63];
+
+  function startPad() {
+    if (!ctx) return;
+    stopPad();
+    PAD_CHORD.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const g = ctx.createGain();
+      const filt = ctx.createBiquadFilter();
+      osc.type = 'sawtooth'; osc2.type = 'sawtooth';
+      osc.frequency.value = freq;
+      osc2.frequency.value = freq * 1.006;
+      filt.type = 'lowpass';
+      filt.frequency.value = 700;
+      filt.Q.value = 2;
+      g.gain.value = 0.08;
+      const lfo = ctx.createOscillator();
+      const lfoGain = ctx.createGain();
+      lfo.frequency.value = 0.05 + i * 0.02;
+      lfoGain.gain.value = 0.05;
+      lfo.connect(lfoGain); lfoGain.connect(g.gain);
+      osc.connect(filt); osc2.connect(filt); filt.connect(g); g.connect(musicGain);
+      osc.start(); osc2.start(); lfo.start();
+      padNodes.push(osc, osc2, lfo);
+    });
+  }
+
+  function stopPad() {
+    padNodes.forEach(n => { try { n.stop(); } catch (e) {} });
+    padNodes = [];
+  }
+
+  function scheduleBell() {
+    if (!musicPlaying) return;
+    if (ctx && prefs.music) {
+      const f = PENTA[Math.floor(Math.random() * PENTA.length)] * 2;
+      const t = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(0.12, t + 0.04);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 2.6);
+      osc.connect(g); g.connect(musicGain);
+      osc.start(t); osc.stop(t + 2.8);
+    }
+    musicTimer = setTimeout(scheduleBell, 3500 + Math.random() * 4500);
+  }
+
+  function startMusic() {
+    resume();
+    if (!ctx || musicPlaying) return;
+    musicPlaying = true;
+    startPad();
+    scheduleBell();
+  }
+
+  function stopMusic() {
+    musicPlaying = false;
+    clearTimeout(musicTimer);
+    stopPad();
+  }
+
+  function setMusic(on) {
+    prefs.music = on;
+    savePrefs();
+    if (musicGain && ctx) {
+      musicGain.gain.linearRampToValueAtTime(on ? 0.3 : 0, ctx.currentTime + 0.3);
+    }
+    if (on && !musicPlaying) startMusic();
+  }
+
+  function setSfx(on) {
+    prefs.sfx = on;
+    savePrefs();
+    if (sfxGain && ctx) sfxGain.gain.value = on ? 1 : 0;
+  }
+
+  function getPrefs() { return { ...prefs }; }
+
+  return { play, resume, startMusic, stopMusic, setMusic, setSfx, getPrefs };
+})();
+
+// ============ BUG REPORTER ============
+const APP_VERSION = 'v7';
+
+function openReportModal() {
+  closeAccountModal();
+  document.getElementById('reportText').value = '';
+  const savedEmail = (currentUser && currentUser.email) || localStorage.getItem('spiritpet_report_email') || '';
+  document.getElementById('reportEmail').value = savedEmail;
+  document.getElementById('reportModal').classList.add('show');
+}
+
+function closeReportModal() {
+  document.getElementById('reportModal').classList.remove('show');
+}
+
+async function sendReport() {
+  const msg = document.getElementById('reportText').value.trim();
+  const email = document.getElementById('reportEmail').value.trim();
+  if (msg.length < 5) {
+    alert('Escribe un poco más para poder ayudarte.');
+    return;
+  }
+  if (email) {
+    try { localStorage.setItem('spiritpet_report_email', email); } catch(e) {}
+  }
+  const btn = document.getElementById('sendReportBtn');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  const report = {
+    message: msg.slice(0, 1500),
+    email: email.slice(0, 120),
+    createdAt: Date.now(),
+    version: APP_VERSION,
+    userAgent: (navigator.userAgent || '').slice(0, 300),
+    uid: currentUser ? currentUser.uid : null,
+    petName: (state && state.name) || null,
+    petStage: state ? state.stage : null,
+    petAge: state ? Math.floor((Date.now() - state.born) / 86400000) : null,
+    resolved: false
+  };
+
+  try {
+    if (firebaseReady) {
+      await firebase.firestore().collection('reports').add(report);
+      closeReportModal();
+      showToast('✓ Incidencia enviada. ¡Gracias!');
+    } else {
+      throw new Error('offline');
+    }
+  } catch (e) {
+    console.warn('Report send failed', e);
+    // Fallback: abrir cliente de email
+    const subject = encodeURIComponent('SpiritPet — Incidencia');
+    const body = encodeURIComponent(msg + '\n\n---\n' + (navigator.userAgent || ''));
+    const mailto = `mailto:enclaveparanormal.contacto@gmail.com?subject=${subject}&body=${body}`;
+    if (confirm('No se pudo enviar online. ¿Abrir tu app de correo para enviarlo?')) {
+      window.location.href = mailto;
+    }
+    closeReportModal();
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Enviar';
+  }
+}
+
+// ============ SOUND UI ============
+function updateSoundBtnIcon() {
+  const p = SP_Audio.getPrefs();
+  const btn = document.getElementById('soundBtn');
+  if (btn) btn.textContent = (p.music || p.sfx) ? '🔊' : '🔇';
+}
+
+function refreshSoundToggles() {
+  const p = SP_Audio.getPrefs();
+  const mt = document.getElementById('musicToggle');
+  const st = document.getElementById('sfxToggle');
+  mt.textContent = p.music ? 'ON' : 'OFF';
+  mt.classList.toggle('off', !p.music);
+  st.textContent = p.sfx ? 'ON' : 'OFF';
+  st.classList.toggle('off', !p.sfx);
+  updateSoundBtnIcon();
+}
+
+function openSoundModal() {
+  refreshSoundToggles();
+  document.getElementById('soundModal').classList.add('show');
+}
+
+let audioStarted = false;
+function startAudioOnGesture() {
+  if (audioStarted) return;
+  audioStarted = true;
+  SP_Audio.resume();
+  if (SP_Audio.getPrefs().music) SP_Audio.startMusic();
+  updateSoundBtnIcon();
+}
+document.addEventListener('pointerdown', startAudioOnGesture);
+document.addEventListener('keydown', startAudioOnGesture);
+
 // ============ ELEMENTS ============
 const $ = id => document.getElementById(id);
 const ghost = $('ghost');
@@ -2118,6 +2474,7 @@ function init() {
   }
   // Initialize cloud sync (no-op if not configured)
   initFirebase();
+  updateSoundBtnIcon();
 }
 
 // Account modal listeners
@@ -2133,6 +2490,28 @@ document.getElementById('loginWarnBannerBtn').addEventListener('click', () => {
   openAccountModal();
 });
 document.getElementById('loginWarnBannerClose').addEventListener('click', dismissLoginNag);
+document.getElementById('openReportBtn').addEventListener('click', openReportModal);
+document.getElementById('sendReportBtn').addEventListener('click', sendReport);
+document.getElementById('cancelReportBtn').addEventListener('click', closeReportModal);
+document.getElementById('reportModal').addEventListener('click', e => {
+  if (e.target.id === 'reportModal') closeReportModal();
+});
+document.getElementById('soundBtn').addEventListener('click', openSoundModal);
+document.getElementById('soundCloseBtn').addEventListener('click', () => {
+  document.getElementById('soundModal').classList.remove('show');
+});
+document.getElementById('soundModal').addEventListener('click', e => {
+  if (e.target.id === 'soundModal') document.getElementById('soundModal').classList.remove('show');
+});
+document.getElementById('musicToggle').addEventListener('click', () => {
+  SP_Audio.setMusic(!SP_Audio.getPrefs().music);
+  refreshSoundToggles();
+});
+document.getElementById('sfxToggle').addEventListener('click', () => {
+  SP_Audio.setSfx(!SP_Audio.getPrefs().sfx);
+  refreshSoundToggles();
+  SP_Audio.play('button');
+});
 
 $('nameBtn').addEventListener('click', () => {
   const n = $('nameInput').value.trim();
@@ -2174,11 +2553,14 @@ function catchUpTime() {
   if (state.sleeping && state.energy >= 100) state.sleeping = false;
 
   const ageDays = (now - state.born) / 86400000;
+  const prevStage = state.stage;
   if (ageDays < 1) state.stage = 0;
   else if (ageDays < 3) state.stage = 1;
   else if (ageDays < 7) state.stage = 2;
   else state.stage = 3;
+  if (state.stage > prevStage) SP_Audio.play('evolve');
 
+  const wasDead = state.dead;
   if (state.hunger === 0 && state.thirst === 0 && minutes > 30) {
     state.dead = true;
     state.deathReason = 'sin alimento ni esencia, su forma se ha disipado';
@@ -2186,6 +2568,7 @@ function catchUpTime() {
     state.dead = true;
     state.deathReason = 'la tristeza lo ha llevado de vuelta al velo';
   }
+  if (!wasDead && state.dead) SP_Audio.play('lose');
 
   state.lastUpdate = now;
   saveState();
@@ -2225,6 +2608,7 @@ $('sleepBtn').addEventListener('click', () => {
   if (state.dead) return;
   catchUpTime();
   state.sleeping = !state.sleeping;
+  SP_Audio.play(state.sleeping ? 'sleep' : 'wake');
   showThought(state.sleeping ? '☾' : '☀');
   saveState();
   render();
@@ -2242,6 +2626,7 @@ $('cleanBtn').addEventListener('click', e => {
 ghostWrap.addEventListener('click', () => {
   if (state.dead || state.sleeping) return;
   catchUpTime();
+  SP_Audio.play('pet');
   state.happy = Math.min(100, state.happy + 4);
   ghost.classList.add('petting');
   setTimeout(() => ghost.classList.remove('petting'), 400);
@@ -2355,8 +2740,10 @@ function playEatingAnimation(food) {
   setTimeout(() => {
     if (isDrink) {
       wrap.classList.add('emotion-drinking');
+      SP_Audio.play('drink');
     } else {
       wrap.classList.add('emotion-eating');
+      SP_Audio.play('eat');
     }
     ghost.classList.add('eating', 'chewing');
   }, 800);
@@ -2533,7 +2920,8 @@ function cleanPoop(poopId) {
     showCleanerWarning();
     return;
   }
-  
+
+  SP_Audio.play('clean');
   // Animate and remove
   const tools = { broom: '🧹', holy: '💧', sage: '🌿' };
   const toolEl = document.createElement('div');
@@ -2644,7 +3032,10 @@ function triggerEmotion(emotion) {
   const ghost = $('ghost');
   const emotionClass = 'emotion-' + emotion;
   wrap.classList.add(emotionClass);
-  
+
+  const emoSfx = { happy: 'happy', sad: 'sad', angry: 'alert', love: 'love', surprise: 'surprise' };
+  if (emoSfx[emotion]) SP_Audio.play(emoSfx[emotion]);
+
   if (emotion === 'happy') {
     ghost.classList.add('veryHappy');
     setTimeout(() => ghost.classList.remove('veryHappy'), 1800);
@@ -2720,6 +3111,7 @@ function renderCleanersShop() {
         if (state.coins < item.cost) return;
         state.coins -= item.cost;
         state.cleaners[item.id] = (state.cleaners[item.id] || 0) + item.uses;
+        SP_Audio.play('buy');
         saveState();
         render();
         renderShop();
@@ -2760,12 +3152,14 @@ function renderShopSection(type, items, owned, equipped, stateKey) {
         if (isOwned) {
           // Equip
           state[stateKey] = item.id;
+          SP_Audio.play('button');
         } else {
           // Buy
           if (state.coins < item.cost) return;
           state.coins -= item.cost;
           owned.push(item.id);
           state[stateKey] = item.id;
+          SP_Audio.play('buy');
         }
         saveState();
         render();
@@ -2779,6 +3173,7 @@ function renderShopSection(type, items, owned, equipped, stateKey) {
 // ============ COINS ============
 function addCoins(amount, btnEl) {
   state.coins += amount;
+  SP_Audio.play('coin');
   saveState();
   $('coinsVal').textContent = state.coins;
   // floating coin
@@ -2840,6 +3235,7 @@ function startGame(id) {
   $('gameScore').textContent = 0;
   $('gameTime').textContent = 30;
   $('gameModal').classList.add('show');
+  SP_Audio.play('play');
   
   if (id === 'pong') initPong();
   else if (id === 'memory') initMemory();
@@ -2855,6 +3251,7 @@ function endGame() {
   $('gameEndScore').textContent = score;
   $('gameEndCoins').textContent = coins;
   $('gameEnd').classList.add('show');
+  SP_Audio.play(score >= 5 ? 'win' : 'lose');
   $('gameArea').style.display = 'none';
   $('gameInfo').style.display = 'none';
   addCoins(coins);
